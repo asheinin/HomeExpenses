@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      /* Optional: Add some basic styling for better appearance */
+      body {
+        font-family: Arial, sans-serif;
+      }
+      .form-group {
+        margin-bottom: 10px;
+      }
+      label {
+        display: block;
+        font-weight: bold;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 5px;
+        box-sizing: border-box;
+      }
+      input[type="checkbox"] {
+        margin-right: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Add New Expense</h2>
+    <form id="expenseForm">
+      <div class="form-group">
+        <label for="expenseName">Expense Name:</label>
+        <input type="text" id="expenseName" required>
+      </div>
+      <div class="form-group">
+        <label for="expenseType">Expense Type:</label>
+        <input type="text" id="expenseType" required>
+      </div>
+      <div class="form-group">
+        <label for="expenseAmount">Amount:</label>
+        <input type="text" id="expenseAmount">
+      </div>
+      <div class="form-group">
+        <label for="papCheckbox">Is this pre-authorized payment?</label>
+        <input type="checkbox" id="papCheckbox">
+      </div>
+      <div class="form-group">
+        <label for="expensePeriod">Period (e.g., "monthly"):</label>
+        <input type="text" id="expensePeriod">
+      </div>
+      <button type="button" onclick="submitForm()">Submit</button>
+      <button type="button" onclick="google.script.host.close()">Cancel</button>
+    </form>
+
+    <script>
+      function submitForm() {
+        var name = document.getElementById('expenseName').value;
+        var type = document.getElementById('expenseType').value;
+        var amount = document.getElementById('expenseAmount').value;
+        var pap = document.getElementById('papCheckbox').checked;
+        var period = document.getElementById('expensePeriod').value;
+
+        const mode = <?= JSON.stringify(_mode) ?>;
+
+        // Use google.script.run to call the server-side function
+        google.script.run
+          .withSuccessHandler(closeDialog)
+          .processForm(name, type, amount, pap, period, mode);
+      }
+
+      function closeDialog() {
+        google.script.host.close();
+      }
+    </script>
+  </body>
+</html>`
