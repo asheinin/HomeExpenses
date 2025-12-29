@@ -1,75 +1,121 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <base target="_top">
-    <style>
-      /* Optional: Add some basic styling for better appearance */
-      body {
-        font-family: Arial, sans-serif;
-      }
-      .form-group {
-        margin-bottom: 10px;
-      }
-      label {
-        display: block;
-        font-weight: bold;
-      }
-      input[type="text"] {
-        width: 100%;
-        padding: 5px;
-        box-sizing: border-box;
-      }
-      input[type="checkbox"] {
-        margin-right: 5px;
-      }
-    </style>
-  </head>
-  <body>
-    <h2>Add New Expense</h2>
-    <form id="expenseForm">
-      <div class="form-group">
-        <label for="expenseName">Expense Name:</label>
-        <input type="text" id="expenseName" required>
-      </div>
-      <div class="form-group">
-        <label for="expenseType">Expense Type:</label>
-        <input type="text" id="expenseType" required>
-      </div>
-      <div class="form-group">
-        <label for="expenseAmount">Amount:</label>
-        <input type="text" id="expenseAmount">
-      </div>
-      <div class="form-group">
-        <label for="papCheckbox">Is this pre-authorized payment?</label>
-        <input type="checkbox" id="papCheckbox">
-      </div>
-      <div class="form-group">
-        <label for="expensePeriod">Period (e.g., "monthly"):</label>
-        <input type="text" id="expensePeriod">
-      </div>
-      <button type="button" onclick="submitForm()">Submit</button>
+
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+  <style>
+    body {
+      padding: 20px;
+      font-size: 14px;
+      /* Increased slightly */
+    }
+
+    .block {
+      margin-bottom: 15px;
+      /* Increased spacing */
+    }
+
+    .actions {
+      margin-top: 25px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 14px;
+      /* Consistent font size */
+      padding: 4px;
+      /* More padding for larger font */
+    }
+
+    #expenseAmount {
+      width: 150px;
+    }
+
+    label {
+      font-size: 14px;
+      margin-bottom: 4px;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <form id="expenseForm">
+    <div class="block form-group">
+      <label for="expenseName"><b>Expense Name</b></label>
+      <input type="text" id="expenseName" placeholder="Electricity Bill" required>
+    </div>
+
+    <div class="block form-group">
+      <label for="expenseType"><b>Expense Type</b></label>
+      <input type="text" id="expenseType" list="typeChoices" placeholder="Utilities" required>
+      <datalist id="typeChoices">
+        <? for (var i = 0; i < expenseTypes.length; i++) { ?>
+        <option value="<?= expenseTypes[i] ?>">
+          <? } ?>
+      </datalist>
+    </div>
+
+    <div class="block form-group">
+      <label for="expenseAmount"><b>Amount ($)</b></label>
+      <input type="number" step="0.01" id="expenseAmount" placeholder="0.00">
+    </div>
+
+    <div class="block checkbox-group">
+      <input type="checkbox" id="papCheckbox">
+      <label for="papCheckbox">Pre-authorized payment?</label>
+    </div>
+
+    <div class="block form-group">
+      <label for="expensePeriod"><b>Billing Period</b></label>
+      <input type="text" id="expensePeriod" placeholder="e.g. monthly">
+    </div>
+
+    <div class="block actions">
+      <button type="button" class="blue" id="submit-btn" onclick="submitForm()">Add Expense</button>
       <button type="button" onclick="google.script.host.close()">Cancel</button>
-    </form>
+    </div>
+  </form>
 
-    <script>
-      function submitForm() {
-        var name = document.getElementById('expenseName').value;
-        var type = document.getElementById('expenseType').value;
-        var amount = document.getElementById('expenseAmount').value;
-        var pap = document.getElementById('papCheckbox').checked;
-        var period = document.getElementById('expensePeriod').value;
+  <script>
+    const executionMode = <?= mode ?>;
 
-        const mode = <?= JSON.stringify(_mode) ?>;
+    function submitForm() {
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
 
-        // Use google.script.run to call the server-side function
-        google.script.run
-          .withSuccessHandler(closeDialog)
-          .processForm(name, type, amount, pap, period, mode);
+      var name = document.getElementById('expenseName').value;
+      var type = document.getElementById('expenseType').value;
+      var amount = document.getElementById('expenseAmount').value;
+      var pap = document.getElementById('papCheckbox').checked;
+      var period = document.getElementById('expensePeriod').value;
+
+      if (!name || !type) {
+        alert('Please fill in required fields.');
+        btn.disabled = false;
+        btn.textContent = 'Add Expense';
+        return;
       }
 
-      function closeDialog() {
-        google.script.host.close();
-      }
-    </script>
-  </body>
-</html>`
+      google.script.run
+        .withSuccessHandler(closeDialog)
+        .withFailureHandler(function (err) {
+          alert('Error: ' + err);
+          btn.disabled = false;
+          btn.textContent = 'Add Expense';
+        })
+        .processForm(name, type, amount, pap, period, executionMode);
+    }
+
+    function closeDialog() {
+      google.script.host.close();
+    }
+  </script>
+</body>
+
+</html>
