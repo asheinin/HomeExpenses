@@ -1,1 +1,45 @@
-# HomeExpenses
+# Home Expenses
+
+A comprehensive Google Apps Script project for managing and tracking home expenses shared between two individuals (Spouses/Partners). It provides a structured way to record monthly expenses, handle shared payments, and generate year-to-date (YTD) summaries and tax-ready documents.
+
+## Key Features
+
+- **Custom Sidebar & Dialogs**: Uses a custom UI for adding expenses, choosing between recurrent or one-time entries.
+- **AI-Assisted Entry**: Includes logic for AI-powered expense addition (integration with form-based entries).
+- **Monthly Balance Tracking**: Specifically designed for two users (Spouse 1 & Spouse 2) with automated calculations of who owes what.
+- **YTD Summary**: Automatically aggregates expenses by category across all months.
+- **Automated Notifications**: Sends monthly balance summaries via email.
+- **End-of-Year (EOY) Tools**: Generates next year's spreadsheet and tax receipt documents.
+- **Pre-Authorized Payment (PAP) Support**: Tracks and flags automated payments.
+
+## Project Structure
+
+- `main.js`: Contains global configurations, constants for spreadsheet layout, and constructor functions for static numbers.
+- `open.js`: Handles the `onOpen` trigger, creates custom menus (`Payments`, `Settle Month`, `Expenses`, `General Actions`), and manages real-time cell validation and formula updates.
+- `AddNewExpence.js`: Original logic for adding recurrent or one-time expenses with basic dialog prompts.
+- `AddNewExpenceAI.js`: More modern expense entry system using an HTML form (`ExpenseForm.html`) for a better user experience.
+- `SummaryAI.js`: Logic for generating the "Summary" sheet, aggregating data by type, and creating charts.
+- `GetMonthlyBalance.js`: Calculates the final balance between users and sends automated email summaries.
+- `CreateEOYDocument.js` & `CreateNewFile.js`: Administrative tools for wrapping up the year and preparing for the next.
+- `Utilities.js`: Helper functions for custom UI dialogs (Yes/No, Input prompts).
+- `BarCharts.html` & `Chart.js`: Components for visualizing expense data.
+
+## Setup Instructions
+
+1.  **Google Sheet Setup**: Create a new Google Sheet.
+2.  **Open Apps Script**: Go to `Extensions` > `Apps Script`.
+3.  **Copy Files**: Copy all `.js` and `.html` files from this repository into the Apps Script editor.
+4.  **Rename Files**: Change `.js` extensions to `.gs` within the Apps Script editor (if copying manually).
+5.  **Initialize**: Run the `open` function once from the script editor to set up triggers and custom menus.
+6.  **Dashboard Configuration**: Ensure your first sheet is your "Dashboard" where User 1 and User 2 names and emails are set (see `main.js` for layout constants).
+
+## Usage
+
+Once installed, you will see a **Payments** and **Expenses** menu in your Google Sheet:
+- **Expenses**: Use "Create/Update Expense" to add new items. It will automatically populate the relevant months.
+- **Settle Month**: Use this to close the previous month and carry over balances if necessary.
+- **General Actions**: Run "Calculate YTD Totals" to refresh your Summary sheet and charts.
+
+## License
+
+MIT
