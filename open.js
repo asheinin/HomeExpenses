@@ -59,9 +59,9 @@ function open() {
       
         ui.createMenu('Expenses')
          .addSubMenu(ui.createMenu('Create/Update Recurrent Expense')
-           .addItem("Create/Update Expense from January", "addNewExpenseRY1"))
+           .addItem("Create/Update Expense from January", "addNewExpenseRY"))
          .addSeparator()
-         .addItem("Create/Update One Time Expense in " + formattedMonthCurrent, "addNewExpenseOT1")
+         .addItem("Create/Update One Time Expense in " + formattedMonthCurrent, "addNewExpenseOT")
         .addToUi();
       
         break;
@@ -93,9 +93,9 @@ function open() {
       
       ui.createMenu('Expenses')
          .addSubMenu(ui.createMenu('Create/Update Recurrent Expense')
-           .addItem("Create/Update Expense from January", "addNewExpenseRY1"))
+           .addItem("Create/Update Expense from January", "addNewExpenseRY"))
          .addSeparator()
-         .addItem("Create/Update One Time Expense in " + formattedMonthCurrent, "addNewExpenseAIOT")
+         .addItem("Create/Update One Time Expense in " + formattedMonthCurrent, "addNewExpenseOT")
       .addToUi();
         
       break;
@@ -148,10 +148,10 @@ function open() {
       
         ui.createMenu('Expenses')
          .addSubMenu(ui.createMenu('Create/Update Recurrent Expense')
-           .addItem("Create/Update Expense from " + formattedMonthCurrent, "addNewExpenseRM1")
-           .addItem("Create/Update Expense from January", "addNewExpenseRY1"))
+           .addItem("Create/Update Expense from " + formattedMonthCurrent, "addNewExpenseRM")
+           .addItem("Create/Update Expense from January", "addNewExpenseRY"))
          .addSeparator()
-         .addItem("Create/Update One Time Expense in " + formattedMonthCurrent, "addNewExpenseOT1")
+         .addItem("Create/Update One Time Expense in " + formattedMonthCurrent, "addNewExpenseOT")
         .addToUi();
       
         
@@ -295,4 +295,5 @@ function fncOpenMyDialog() {
   SpreadsheetApp.getUi()
       .showModalDialog(htmlDlg, 'A Title Goes Here');
 };
+
 
