@@ -118,6 +118,7 @@ function summaryExpenses() {
 
   graph(lastRow,myNumbers.summarySumRow+1);
 
+  runAnalytics()
   
 
 }

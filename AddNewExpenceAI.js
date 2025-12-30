@@ -1,12 +1,12 @@
-function addNewExpenseAIRM() { // Recurrent from current month
+function addNewExpenseRM() { // Recurrent from current month
   addNewExpenseAI('rm');
 }
 
-function addNewExpenseAIRY() { // Recurrent from beginning of year
+function addNewExpenseRY() { // Recurrent from beginning of year
   addNewExpenseAI('ry');
 }
 
-function addNewExpenseAIOT() { // One time in current month 
+function addNewExpenseOT() { // One time in current month 
   addNewExpenseAI('ot');
 }
 
