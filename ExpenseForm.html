@@ -67,19 +67,35 @@
     .checkbox-inline input[type="checkbox"] {
       margin: 0;
     }
+
+    .error-message {
+      color: #d93025;
+      font-size: 13px;
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      background-color: #fce8e6;
+      border-radius: 4px;
+      display: none;
+    }
+
+    .input-error {
+      border: 2px solid #d93025 !important;
+      background-color: #fef7f6;
+    }
   </style>
 
 </head>
 
 <body>
   <form id="expenseForm">
+    <div id="errorMessage" class="error-message"></div>
     <div class="block form-group">
-      <label for="expenseName"><b>Expense Name</b></label>
-      <input type="text" id="expenseName" placeholder="Electricity Bill" required>
+      <label for="expenseName"><b>Expense Name*</b></label>
+      <input type="text" id="expenseName" placeholder="home insurance" required>
     </div>
 
     <div class="block form-group">
-      <label for="expenseType"><b>Expense Type</b></label>
+      <label for="expenseType"><b>Expense Type*</b></label>
       <input type="text" id="expenseType" list="typeChoices" placeholder="Utilities" required>
       <datalist id="typeChoices">
         <? for (var i = 0; i < expenseTypes.length; i++) { ?>
@@ -93,32 +109,31 @@
       <input type="number" step="0.01" id="expenseAmount" placeholder="0.00">
     </div>
 
-    <div class="block checkbox-group">
-      <input type="checkbox" id="papCheckbox">
-      <label for="papCheckbox">Pre-authorized payment?</label>
+    <div class="block checkbox-row">
+      <label class="checkbox-inline"><input type="checkbox" id="papCheckbox"> PAP</label>
+      <label class="checkbox-inline"><input type="checkbox" id="splitCheckbox" checked> Split</label>
+      <label class="checkbox-inline"><input type="checkbox" id="paidCheckbox"> Paid</label>
     </div>
 
-    <div class="block checkbox-group">
-      <input type="checkbox" id="splitCheckbox">
-      <label for="splitCheckbox">Split payment?</label>
-    </div>
-
-    <div class="block checkbox-group">
-      <input type="checkbox" id="paidCheckbox">
-      <label for="paidCheckbox">Paid?</label>
-    </div>
 
     <div class="block form-group">
       <label for="expensePeriod"><b>Billing Period</b></label>
-      <input type="text" id="expensePeriod" placeholder="e.g. monthly">
+      <select id="expensePeriod">
+        <option value="">-- Select Period --</option>
+        <? for (var i = 0; i < expensePeriods.length; i++) { ?>
+        <option value="<?= expensePeriods[i] ?>">
+          <?= expensePeriods[i] ?>
+        </option>
+        <? } ?>
+      </select>
     </div>
 
     <div class="block form-group">
       <label for="paidBySelect"><b>Paid By</b></label>
       <select id="paidBySelect">
-        <option value="">-- Select --</option>
+        <option value="0">-- Select --</option>
         <? for (var i = 0; i < spouseNames.length; i++) { ?>
-        <option value="<?= spouseNames[i] ?>">
+        <option value="<?= i + 1 ?>">
           <?= spouseNames[i] ?>
         </option>
         <? } ?>
@@ -147,10 +162,28 @@
       var paid = document.getElementById('paidCheckbox').checked;
       var period = document.getElementById('expensePeriod').value;
 
-      var paidBy = document.getElementById('paidBySelect').value;
+      var paidBySelect = document.getElementById('paidBySelect');
+      var paidByIndex = parseInt(paidBySelect.value) || 0;
+      var paidByName = paidBySelect.options[paidBySelect.selectedIndex].text;
+      if (paidByIndex === 0) paidByName = '';
 
-      if (!name || !type) {
-        alert('Please fill in required fields.');
+      // Clear previous errors
+      clearErrors();
+
+      var errors = [];
+      if (!name) {
+        errors.push('Expense Name is required');
+        document.getElementById('expenseName').classList.add('input-error');
+      }
+      if (!type) {
+        errors.push('Expense Type is required');
+        document.getElementById('expenseType').classList.add('input-error');
+      }
+
+      if (errors.length > 0) {
+        var errorDiv = document.getElementById('errorMessage');
+        errorDiv.innerHTML = errors.join('<br>');
+        errorDiv.style.display = 'block';
         btn.disabled = false;
         btn.textContent = 'Add Expense';
         return;
@@ -163,11 +196,17 @@
           btn.disabled = false;
           btn.textContent = 'Add Expense';
         })
-        .processForm(name, type, amount, pap, period, executionMode, split, paid, paidBy);
+        .processForm(name, type, amount, pap, period, executionMode, split, paid, paidByName, paidByIndex);
     }
 
     function closeDialog() {
       google.script.host.close();
+    }
+
+    function clearErrors() {
+      document.getElementById('errorMessage').style.display = 'none';
+      document.getElementById('expenseName').classList.remove('input-error');
+      document.getElementById('expenseType').classList.remove('input-error');
     }
   </script>
 </body>
