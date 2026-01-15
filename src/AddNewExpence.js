@@ -46,7 +46,7 @@ function deleteExpenseAI(mode) {
     return { name: name, type: expenseMap[name] };
   });
 
-  var template = HtmlService.createTemplateFromFile('DeleteExpenseForm');
+  var template = HtmlService.createTemplateFromFile('ui/DeleteExpenseForm');
   template.mode = mode;
   template.expenseItems = expenseItems;
   var html = template.evaluate().setWidth(450).setHeight(280);
@@ -144,7 +144,7 @@ function addNewExpenseAI(mode) {
     });
   }
 
-  var template = HtmlService.createTemplateFromFile('ExpenseForm');
+  var template = HtmlService.createTemplateFromFile('ui/ExpenseForm');
   template.mode = mode;
   template.expenseTypes = Array.from(expenseTypes).sort();
   template.expensePeriods = Array.from(expensePeriods).sort();
