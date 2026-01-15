@@ -1,4 +1,4 @@
-function runAnalytics() {
+function _runAnalytics() {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const ui = SpreadsheetApp.getUi();
     const myNumbers = new staticNumbers();
@@ -115,56 +115,30 @@ function runAnalytics() {
     let startRow = Math.max(lastRowOfData + 5, myNumbers.summaryMinStartAnalyticsRow);
 
     for (let i = 0; i < existingHeaders.length; i++) {
-        const headerVal = existingHeaders[i][myNumbers.summaryAnalyticsYearColumn - 1];
-        if (headerVal === "Historical Spending Summary" || existingHeaders[i][16] === "Historical Spending Summary") {
+        if (existingHeaders[i][0] === "Historical Spending Summary" || existingHeaders[i][16] === "Historical Spending Summary") {
             startRow = i + 1;
-            // Clear content across all analytics columns
-            summarySheet.getRange(startRow, 1, Math.max(lastRowOfData - startRow + 30, 1), 25).clearContent();
+            summarySheet.getRange(startRow, 1, Math.max(lastRowOfData - startRow + 30, 1), 50).clearContent();
             break;
         }
     }
 
-    // Set Section Title at configured Year Column
-    summarySheet.getRange(startRow + 1, myNumbers.summaryAnalyticsYearColumn).setValue("Historical Spending Summary")
+
+    summarySheet.getRange(startRow+1, myNumbers.summaryAnalyticsYearColumn).setValue("Historical Spending Summary")
         .setFontWeight("normal")
         .setFontFamily("Roboto")
         .setFontSize(14)
         .setFontColor("#666666");
 
-    // "Trend" header for sparklines (Column 2)
-    const trendCol = myNumbers.summaryAnalyticsYearColumn + 1;
-    summarySheet.getRange(startRow + 2, trendCol).setValue("Trend");
-
-    // Split matrix data into Year column and the rest
-    const yearData = matrixData.map(row => [row[0]]);
-    const restOfData = matrixData.map(row => row.slice(1));
-
-    const yearRange = summarySheet.getRange(startRow + 2, myNumbers.summaryAnalyticsYearColumn, yearData.length, 1);
-    yearRange.setValues(yearData);
-
-    const dataRange = summarySheet.getRange(startRow + 2, myNumbers.summaryAnalyticsDataStartColumn, restOfData.length, restOfData[0].length);
-    dataRange.setValues(restOfData);
-
-    // Generate and set SPARKLINE formulas for Column B (Trend)
-    // Formula format: =SPARKLINE(C4,{"charttype","bar";"max",MAX_VAL})
-    const trendRange = summarySheet.getRange(startRow + 3, trendCol, matrixData.length - 1, 1);
-    const sparklineFormulas = [];
-    for (let i = 0; i < matrixData.length - 1; i++) {
-        const amtCell = summarySheet.getRange(startRow + 3 + i, myNumbers.summaryAnalyticsDataStartColumn).getA1Notation();
-        sparklineFormulas.push(['=SPARKLINE(' + amtCell + ',{"charttype","bar";"max",' + maxTotalSpend + '})']);
-    }
-    trendRange.setFormulas(sparklineFormulas);
+    const matrixRange = summarySheet.getRange(startRow + 2, myNumbers.summaryAnalyticsYearColumn, matrixData.length, matrixData[0].length);
+    matrixRange.setValues(matrixData);
 
     // Formatting
-    yearRange.setFontWeight("bold").setBackground("#f8f9fa").setFontColor("#000000");
-    summarySheet.getRange(startRow + 2, trendCol).setFontWeight("bold").setBackground("#f8f9fa").setFontColor("#000000");
-    const headerRange = summarySheet.getRange(startRow + 2, myNumbers.summaryAnalyticsDataStartColumn, 1, restOfData[0].length);
-    headerRange.setFontWeight("bold").setBackground("#f8f9fa").setFontColor("#000000");
-    const numericDataRange = summarySheet.getRange(startRow + 3, myNumbers.summaryAnalyticsDataStartColumn, restOfData.length - 1, restOfData[0].length);
-    numericDataRange.setNumberFormat("$#,##0;;").setFontColor("#000000");
-    //summarySheet.autoResizeColumns(colA, matrixData[0].length);
+    matrixRange.setWrap(true);
+    summarySheet.getRange(startRow + 2, myNumbers.summaryAnalyticsYearColumn, 1, matrixData[0].length).setFontWeight("bold").setBackground("#f8f9fa");
+    summarySheet.getRange(startRow + 3, myNumbers.summaryAnalyticsYearColumn + 1, matrixData.length - 1, matrixData[0].length - 1).setNumberFormat("$#,##0;;");
+    //summarySheet.autoResizeColumns(myNumbers.summaryAnalyticsYearColumn, matrixData[0].length);
 
-
+  
 
     // 7. Create/Update Chart
     const charts = summarySheet.getCharts();
@@ -174,12 +148,10 @@ function runAnalytics() {
         }
     });
 
-    const colQ = 17;
-
     // Ranges
     const rangeYear = summarySheet.getRange(startRow + 2, myNumbers.summaryAnalyticsYearColumn, matrixData.length, 1);
-    const rangeTotal = summarySheet.getRange(startRow + 2, myNumbers.summaryAnalyticsDataStartColumn, matrixData.length, 1);
-    const rangeStacks = summarySheet.getRange(startRow + 2, myNumbers.summaryAnalyticsDataStartColumn + 1, matrixData.length, restOfData[0].length - 1);
+    const rangeTotal = summarySheet.getRange(startRow + 2, myNumbers.summaryAnalyticsYearColumn + 1, matrixData.length, 1);
+    const rangeStacks = summarySheet.getRange(startRow + 2, myNumbers.summaryAnalyticsYearColumn + 2, matrixData.length, matrixData[0].length - 2);
 
     const seriesOptions = {};
     seriesOptions[0] = {
@@ -213,12 +185,9 @@ function runAnalytics() {
         .setOption('height', 620)
         .setOption('series', seriesOptions)
         .setOption('legend', { position: 'right', textStyle: { fontSize: 10 } })
-        .setPosition(startRow + 2, colQ, 0, 0)
+        .setPosition(startRow + 2, myNumbers.summaryChartsStartColumn, 0, 0)
         .build();
 
     summarySheet.insertChart(chartBuilder);
 }
-
-
-
 

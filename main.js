@@ -14,7 +14,7 @@ function staticNumbers () { // constructor function
   this.expenseFirstRow = 3;
   this.expenseLastRow = 50;
   this.expenseTotalAmountRow = 53;
-  this.expenseTotalPaidSp2Row = 56;
+  this.expenseTotalPaidSp2Row = 56; 
   this.expenseTotalPaidSp1Row = 60;
   this.expenseSp2MonthlyBalanceRow = 63;
   this.expenseSp1MonthlyBalanceRow = 64;
@@ -26,16 +26,14 @@ function staticNumbers () { // constructor function
   this.expenseTypeColumn = 1;
   this.expenseDescrColumn = 2;
   this.expenseDateColumn = 3;
-
-  
   this.expenseAmountColumn = 4;
-
   this.expenseCarryOverSp2OwesColumn = 5;
   this.expenseCarryOverSp1OwesColumn = 6;
   this.expenceSplit2Column = 5;
   this.expenceSplit1Column = 6;
   this.expenceSplitColumn = 7;
   this.expenseFirstPayColumn = 8;
+  this.expenseSecondPayColumn = 9;
   this.expenseInitialBalanceCol = 2;
   this.expencePeriodColumn = 10;
   this.expensePaidColumn = 11;
@@ -53,9 +51,7 @@ function staticNumbers () { // constructor function
   
   this.dashSpouse1NameColumn = 2;
   this.dashSpouse2NameColumn = 3;
-  
   this.dashAddressColumn = 2;
-  
   this.dashMonthNameColumn = 1;
   this.dashSp1BalanceUsedColumn = 2;
   this.dashSp2BalanceUsedColumn = 3;
@@ -70,13 +66,16 @@ function staticNumbers () { // constructor function
   this.dashSp1ToSp2Column = 10;
   this.dashSp2BalanceColumn = 11;
   this.dashSp1BalanceColumn = 12;
-  
   this.dashColumns = 12;
 
-  this.summaryHeaderRow = 1;
-  this.summarySumRow = 2;
-
+  this.summaryHeaderRow = 2;
+  this.summarySumRow = 3;
+  this.summaryMinStartAnalyticsRow = 29;
+  
   this.summaryAmountColumn = 3;
+  this.summaryAnalyticsYearColumn = 1 ;
+  this.summaryAnalyticsDataStartColumn = 4;
+  this.summaryChartsStartColumn = 17;
   
   this.dashBalanceNegativeBgColor = "red";
   this.dashBalancePositiveBgColor = "green";

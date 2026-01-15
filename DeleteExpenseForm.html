@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+    <style>
+        body {
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        .block {
+            margin-bottom: 15px;
+        }
+
+        .actions {
+            margin-top: 25px;
+        }
+
+        select {
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 14px;
+            padding: 4px;
+            text-align: left;
+        }
+
+        select option {
+            text-align: left;
+        }
+
+        label {
+            font-size: 14px;
+            margin-bottom: 4px;
+            display: block;
+            text-align: left;
+        }
+
+        .error-message {
+            color: #d93025;
+            font-size: 13px;
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            background-color: #fce8e6;
+            border-radius: 4px;
+            display: none;
+            text-align: left;
+        }
+
+        .warning-text {
+            color: #b06000;
+            font-size: 13px;
+            margin-top: 15px;
+            padding: 8px 12px;
+            background-color: #fef7e0;
+            border-radius: 4px;
+            text-align: left;
+        }
+
+        .delete-btn {
+            background-color: #d93025 !important;
+            border-color: #d93025 !important;
+        }
+
+        .delete-btn:hover {
+            background-color: #b82a1f !important;
+        }
+
+        .expense-type {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+
+</head>
+
+<body>
+    <form id="deleteForm">
+        <div id="errorMessage" class="error-message"></div>
+
+        <div class="block form-group">
+            <label for="expenseSelect"><b>Select Expense to Delete*</b></label>
+            <select id="expenseSelect" required>
+                <option value="">-- Select an expense --</option>
+                <? for (var i = 0; i < expenseItems.length; i++) { ?>
+                <option value="<?= expenseItems[i].name ?>">
+                    <?= expenseItems[i].name ?>
+                    <?= expenseItems[i].type ? ' (' + expenseItems[i].type + ')' : '' ?>
+                </option>
+                <? } ?>
+            </select>
+        </div>
+
+        <div class="warning-text">
+            <strong>Warning:</strong> This will delete the selected expense from
+            <? if (mode == 'ry') { ?>
+            all months (January - December).
+            <? } else { ?>
+            the current month through December.
+            <? } ?>
+        </div>
+
+        <div class="block actions">
+            <button type="button" class="delete-btn" id="delete-btn" onclick="submitForm()">Delete Expense</button>
+            <button type="button" onclick="google.script.host.close()">Cancel</button>
+        </div>
+    </form>
+
+    <script>
+        const executionMode = '<?= mode ?>';
+
+        function submitForm() {
+            const btn = document.getElementById('delete-btn');
+            btn.disabled = true;
+            btn.textContent = 'Deleting...';
+
+            var expenseName = document.getElementById('expenseSelect').value;
+
+            // Clear previous errors
+            document.getElementById('errorMessage').style.display = 'none';
+
+            if (!expenseName) {
+                var errorDiv = document.getElementById('errorMessage');
+                errorDiv.innerHTML = 'Please select an expense to delete';
+                errorDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Delete Expense';
+                return;
+            }
+
+            google.script.run
+                .withSuccessHandler(closeDialog)
+                .withFailureHandler(function (err) {
+                    alert('Error: ' + err);
+                    btn.disabled = false;
+                    btn.textContent = 'Delete Expense';
+                })
+                .processDeleteForm(expenseName, executionMode);
+        }
+
+        function closeDialog() {
+            google.script.host.close();
+        }
+    </script>
+</body>
+
+</html>
