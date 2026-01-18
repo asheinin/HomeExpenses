@@ -279,11 +279,11 @@ function runYearComparison() {
         const row = myNumbers.dashFirstMonthRow + i;
 
         // Current year data
-        const currentVal = currentDashboard.getRange(row, myNumbers.dashAmountTotalColumn).getValue();
+        const currentVal = currentDashboard.getRange(row, myNumbers.dashAmountTotalBeforeSplitColumn).getValue();
         currentMonthlyTotals.push(parseFloat(currentVal) || 0);
 
         // Previous year data
-        const prevVal = prevDashboard.getRange(row, myNumbers.dashAmountTotalColumn).getValue();
+        const prevVal = prevDashboard.getRange(row, myNumbers.dashAmountTotalBeforeSplitColumn).getValue();
         prevMonthlyTotals.push(parseFloat(prevVal) || 0);
     }
 
