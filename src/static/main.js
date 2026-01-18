@@ -84,6 +84,7 @@ function staticNumbers() { // constructor function
   this.summaryAnalyticsYearColumn = 1;
   this.summaryAnalyticsDataStartColumn = 4;
   this.summaryChartsStartColumn = 17;
+  this.summaryAnalyticsMonthColumn = 1;
 
   this.dashBalanceNegativeBgColor = "red";
   this.dashBalancePositiveBgColor = "green";

@@ -334,7 +334,7 @@ function runYearComparison() {
         .setOption('vAxis', {
             title: 'Amount ($)',
             gridlines: { count: 5 },
-            viewWindow: { min: 0, max: maxValue * 1.1 },
+            viewWindow: { min: 0, max: maxValue * 1.15 },
             format: '$#,##0'
         })
         .setOption('hAxis', {
@@ -347,7 +347,11 @@ function runYearComparison() {
         .setOption('legend', { position: 'top' })
         .setOption('colors', ['#4285F4', '#EA4335']) // Blue for current year, Red for previous
         .setOption('bar', { groupWidth: '70%' })
-        .setPosition(chartStartRow, myNumbers.summaryChartsStartColumn, 0, 0)
+        .setOption('series', {
+            0: { dataLabel: 'value', dataLabelTextStyle: { fontSize: 9 } },
+            1: { dataLabel: 'value', dataLabelTextStyle: { fontSize: 9 } }
+        })
+        .setPosition(chartStartRow, myNumbers.summaryAnalyticsMonthColumn, 0, 0)
         .build();
 
     summarySheet.insertChart(chartBuilder);
