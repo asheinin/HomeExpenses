@@ -76,9 +76,9 @@ function staticNumbers() { // constructor function
   this.dashSp1BalanceColumn = 13;
   this.dashColumns = 13;
 
-  this.summaryHeaderRow = 2;
-  this.summarySumRow = 3;
-  this.summaryMinStartAnalyticsRow = 29;
+  this.summaryHeaderRow = 1
+  this.summarySumRow = 2
+  this.summaryMinStartAnalyticsRow = 28;
 
   this.summaryAmountColumn = 3;
   this.summaryAnalyticsYearColumn = 1;
