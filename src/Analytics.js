@@ -289,7 +289,7 @@ function runYearComparison() {
     }
 
     // 6. Write data to sheet (hidden area for chart data source)
-    const dataStartRow = lastRowOfData + 1;
+    const dataStartRow = lastRowOfData + 3;
     const dataStartCol = myNumbers.summaryChartsStartColumn;
 
     // Clear any existing comparison data
@@ -311,7 +311,7 @@ function runYearComparison() {
     });
 
     // 8. Create grouped bar chart
-    const chartStartRow = lastRowOfData + 1;
+    const chartStartRow = lastRowOfData + 3;
 
     // Find max value for chart scaling
     const allValues = [...currentMonthlyTotals, ...prevMonthlyTotals];
@@ -337,7 +337,7 @@ function runYearComparison() {
         .setOption('width', 950)
         .setOption('height', 400)
         .setOption('legend', { position: 'top' })
-        .setOption('colors', ['#4285F4', '#EA4335']) // Blue for current year, Red for previous
+        .setOption('colors', ['#4285F4', '#BDBDBD']) // Blue for current year, Gray for previous
         .setOption('bar', { groupWidth: '70%' })
         .setOption('series', {
             0: { dataLabel: 'value', dataLabelTextStyle: { fontSize: 9 } },
