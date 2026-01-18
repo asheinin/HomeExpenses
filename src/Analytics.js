@@ -332,8 +332,8 @@ function runYearComparison() {
         .setOption('isStacked', false)
         .setOption('vAxis', {
             title: 'Amount ($)',
-            gridlines: { count: 5 },
-            viewWindow: { min: 0, max: maxValue * 1.15 },
+            ticks: [0, 3000, 6000, 9000, 12000],
+            viewWindow: { min: 0, max: 12000 },
             format: '$#,##0'
         })
         .setOption('hAxis', {
