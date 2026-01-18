@@ -329,7 +329,6 @@ function runYearComparison() {
         .addRange(dataRange)
         .setNumHeaders(1)
         .setOption('title', 'Year-Over-Year Monthly Comparison')
-        .setOption('titleTextStyle', { fontSize: 14, bold: true })
         .setOption('isStacked', false)
         .setOption('vAxis', {
             title: 'Amount ($)',
