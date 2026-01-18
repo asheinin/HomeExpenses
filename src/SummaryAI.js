@@ -1,11 +1,11 @@
 function summaryExpenses() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   var myNumbers = new staticNumbers();
-  
+
   var numofsheets = SpreadsheetApp.getActiveSpreadsheet().getNumSheets();
-  if (numofsheets == 1){
-     return;
-  }   
+  if (numofsheets == 1) {
+    return;
+  }
 
   const summarySheet = ss.getSheetByName('Summary');
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -13,27 +13,27 @@ function summaryExpenses() {
   var currentMonth = date.getMonth();
   var currentYear = date.getFullYear();
   var fileName = ss.getName();
-  
-  var fileYear = fileName.split(" ").slice(-1).pop(); 
+
+  var fileYear = fileName.split(" ").slice(-1).pop();
 
   Logger.log(currentYear + " " + " " + fileYear);
-  
+
   //Check if this is current year file
-  
+
   if (currentYear > fileYear) {
     currentMonth = 12;
     year = fileYear;
   } else {
     year = currentYear;
-  }  
+  }
 
 
   // Clear the summary sheet
   summarySheet.clear();
 
   summarySheet.clearContents();
-  var chts=summarySheet.getCharts();
-  for(var i=0;i<chts.length;i++){
+  var chts = summarySheet.getCharts();
+  for (var i = 0; i < chts.length; i++) {
     summarySheet.removeChart(chts[i]);
   }
 
@@ -56,9 +56,9 @@ function summaryExpenses() {
     const values = range.getValues();
 
     values.forEach(row => {
-      const type = row[myNumbers.expenseTypeColumn-1];
-      const description = row[myNumbers.expenseDescrColumn-1];
-      const amount = row[myNumbers.expenseAmountColumn-1];
+      const type = row[myNumbers.expenseTypeColumn - 1];
+      const description = row[myNumbers.expenseDescrColumn - 1];
+      const amount = row[myNumbers.expenseAmountColumn - 1];
 
       if (!type || !amount) return;
 
@@ -94,13 +94,13 @@ function summaryExpenses() {
 
   // Set font color for future months and summary row, add formulas for summary row starting with total
   const lastRow = summarySheet.getLastRow();
-  for (let i = myNumbers.summaryAmountColumn; i <= myNumbers.summaryAmountColumn+13; i++) { // Adjusting for the first 3 columns
-    if (i>= currentMonth + myNumbers.summaryAmountColumn+1) { //font color for future months
-      const range = summarySheet.getRange(1, i+1, lastRow, 1);
+  for (let i = myNumbers.summaryAmountColumn; i <= myNumbers.summaryAmountColumn + 13; i++) { // Adjusting for the first 3 columns
+    if (i >= currentMonth + myNumbers.summaryAmountColumn + 1) { //font color for future months
+      const range = summarySheet.getRange(1, i + 1, lastRow, 1);
       range.setFontColor('lightgrey');
     }
 
-    const sumRange1 = summarySheet.getRange(myNumbers.summarySumRow+1, i, lastRow-myNumbers.summarySumRow, 1);
+    const sumRange1 = summarySheet.getRange(myNumbers.summarySumRow + 1, i, lastRow - myNumbers.summarySumRow, 1);
     const sumRangeValue = summarySheet.getRange(myNumbers.summarySumRow, i, 1, 1);
     var formulaSum = '=SUM(' + sumRange1.getA1Notation() + ')';
     console.log(formulaSum);
@@ -116,10 +116,11 @@ function summaryExpenses() {
   totalAmountRange.setFontWeight('bold');
   descriptionRange.setWrap(true);
 
-  graph(lastRow,myNumbers.summarySumRow+1);
+  graph(lastRow, myNumbers.summarySumRow + 1);
 
-  runAnalytics()
-  
+  runAnalytics();
+
+  runYearComparison();
 
 }
 

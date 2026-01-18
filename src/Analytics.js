@@ -220,5 +220,162 @@ function runAnalytics() {
 }
 
 
+/**
+ * Compares monthly expenses between current year and previous year.
+ * Creates a grouped bar chart on the Summary tab showing month-by-month comparison.
+ * Should be called after runAnalytics().
+ */
+function runYearComparison() {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const myNumbers = new staticNumbers();
+
+    // 1. Get current file year
+    const currentFileName = ss.getName();
+    const currentFileYear = parseInt(currentFileName.split(" ").slice(-1).pop());
+
+    if (isNaN(currentFileYear)) {
+        console.log("Could not determine current file year from filename: " + currentFileName);
+        return;
+    }
+
+    const previousYear = currentFileYear - 1;
+
+    // 2. Find previous year file
+    const files = DriveApp.searchFiles('title = "Home payments ' + previousYear + '" and mimeType = "' + MimeType.GOOGLE_SHEETS + '"');
+
+    if (!files.hasNext()) {
+        console.log("Previous year file not found: Home payments " + previousYear);
+        return; // No previous year file, skip comparison
+    }
+
+    const prevFile = files.next();
+    let prevSS;
+    try {
+        prevSS = SpreadsheetApp.open(prevFile);
+    } catch (e) {
+        console.error("Could not open previous year file: " + e.message);
+        return;
+    }
+
+    // 3. Get Summary sheet and calculate lastRow including all charts
+    const summarySheet = ss.getSheetByName("Summary");
+    if (!summarySheet) {
+        console.log("Summary sheet not found");
+        return;
+    }
+
+    const lastRowWithCharts = getLastRowIncludingCharts(summarySheet);
+
+    // 4. Extract monthly data from both files' Dashboard tabs
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const currentDashboard = ss.getSheets()[0]; // Dashboard is first sheet
+    const prevDashboard = prevSS.getSheets()[0];
+
+    const currentMonthlyTotals = [];
+    const prevMonthlyTotals = [];
+
+    for (let i = 0; i < 12; i++) {
+        const row = myNumbers.dashFirstMonthRow + i;
+
+        // Current year data
+        const currentVal = currentDashboard.getRange(row, myNumbers.dashAmountTotalColumn).getValue();
+        currentMonthlyTotals.push(parseFloat(currentVal) || 0);
+
+        // Previous year data
+        const prevVal = prevDashboard.getRange(row, myNumbers.dashAmountTotalColumn).getValue();
+        prevMonthlyTotals.push(parseFloat(prevVal) || 0);
+    }
+
+    // 5. Build comparison data matrix
+    const comparisonData = [];
+    comparisonData.push(["Month", currentFileYear.toString(), previousYear.toString()]);
+
+    for (let i = 0; i < 12; i++) {
+        comparisonData.push([months[i], currentMonthlyTotals[i], prevMonthlyTotals[i]]);
+    }
+
+    // 6. Write data to sheet (hidden area for chart data source)
+    const dataStartRow = lastRowWithCharts + 3;
+    const dataStartCol = myNumbers.summaryChartsStartColumn;
+
+    // Clear any existing comparison data
+    const existingDataRange = summarySheet.getRange(dataStartRow, dataStartCol, 15, 3);
+    existingDataRange.clearContent();
+
+    // Write new data
+    const dataRange = summarySheet.getRange(dataStartRow, dataStartCol, comparisonData.length, 3);
+    dataRange.setValues(comparisonData);
+    dataRange.setFontColor("#FFFFFF"); // Hide the data (white on white)
+    dataRange.setFontSize(1);
+
+    // 7. Remove existing Year Comparison chart if present
+    const charts = summarySheet.getCharts();
+    charts.forEach(c => {
+        if (c.getOptions().get('title') === 'Year-Over-Year Monthly Comparison') {
+            summarySheet.removeChart(c);
+        }
+    });
+
+    // 8. Create grouped bar chart
+    const chartStartRow = lastRowWithCharts + 3;
+
+    // Find max value for chart scaling
+    const allValues = [...currentMonthlyTotals, ...prevMonthlyTotals];
+    const maxValue = Math.max(...allValues);
+
+    const chartBuilder = summarySheet.newChart()
+        .setChartType(Charts.ChartType.COLUMN)
+        .addRange(dataRange)
+        .setNumHeaders(1)
+        .setOption('title', 'Year-Over-Year Monthly Comparison')
+        .setOption('titleTextStyle', { fontSize: 14, bold: true })
+        .setOption('isStacked', false)
+        .setOption('vAxis', {
+            title: 'Amount ($)',
+            gridlines: { count: 5 },
+            viewWindow: { min: 0, max: maxValue * 1.1 },
+            format: '$#,##0'
+        })
+        .setOption('hAxis', {
+            title: 'Month',
+            slantedText: true,
+            slantedTextAngle: 45
+        })
+        .setOption('width', 950)
+        .setOption('height', 400)
+        .setOption('legend', { position: 'top' })
+        .setOption('colors', ['#4285F4', '#EA4335']) // Blue for current year, Red for previous
+        .setOption('bar', { groupWidth: '70%' })
+        .setPosition(chartStartRow, myNumbers.summaryChartsStartColumn, 0, 0)
+        .build();
+
+    summarySheet.insertChart(chartBuilder);
+}
+
+
+/**
+ * Helper function to calculate the last row including all chart positions.
+ * @param {Sheet} sheet - The sheet to analyze
+ * @returns {number} - The last row occupied by data or charts
+ */
+function getLastRowIncludingCharts(sheet) {
+    let lastRow = sheet.getLastRow();
+    const charts = sheet.getCharts();
+
+    charts.forEach(chart => {
+        const containerInfo = chart.getContainerInfo();
+        const anchorRow = containerInfo.getAnchorRow();
+        const chartHeight = chart.getOptions().get('height') || 400;
+        // Approximate rows: ~21 pixels per row in Google Sheets
+        const chartEndRow = anchorRow + Math.ceil(chartHeight / 21);
+
+        if (chartEndRow > lastRow) {
+            lastRow = chartEndRow;
+        }
+    });
+
+    return lastRow;
+}
 
 
