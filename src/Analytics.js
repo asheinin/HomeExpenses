@@ -9,10 +9,19 @@ function runAnalytics() {
     const nowYear = new Date().getFullYear();
     const limitYear = isNaN(currentFileYear) ? nowYear : currentFileYear;
 
-    // 2. Discover files (including current year)
-    const files = DriveApp.searchFiles('title contains "Home payments " and mimeType = "' + MimeType.GOOGLE_SHEETS + '"');
+    // 2. Process current file first (active spreadsheet)
     const rawYearlyData = [];
     const globalTypeTotals = {};
+    const processedYears = new Set();
+
+    const currentYearData = processSheetData(ss, currentFileYear, globalTypeTotals);
+    if (currentYearData) {
+        rawYearlyData.push(currentYearData);
+        processedYears.add(currentFileYear);
+    }
+
+    // 3. Discover other files
+    const files = DriveApp.searchFiles('title contains "Home payments " and mimeType = "' + MimeType.GOOGLE_SHEETS + '"');
 
     while (files.hasNext()) {
         const file = files.next();
@@ -21,36 +30,14 @@ function runAnalytics() {
 
         if (yearMatch) {
             const year = parseInt(yearMatch[1]);
-            if (year <= limitYear) {
+            // Skip current year (already processed) and any duplicates
+            if (year <= limitYear && !processedYears.has(year)) {
                 try {
                     const histSS = SpreadsheetApp.open(file);
-                    const summarySheet = histSS.getSheetByName("Summary");
-
-                    if (summarySheet) {
-                        let yearlyTotal = 0;
-                        const yearlyTypeTotals = {};
-
-                        const lastRow = summarySheet.getLastRow();
-                        if (lastRow >= 3) {
-                            const dataRange = summarySheet.getRange(3, 1, lastRow - 2, 3).getValues(); // Cols A, B, C
-                            dataRange.forEach(row => {
-                                const type = (row[0] || "Uncategorized").toString().trim();
-                                const amount = parseFloat(row[2]) || 0;
-
-                                if (amount > 0) {
-                                    yearlyTypeTotals[type] = (yearlyTypeTotals[type] || 0) + amount;
-                                    globalTypeTotals[type] = (globalTypeTotals[type] || 0) + amount;
-
-                                    yearlyTotal += amount;
-                                }
-                            });
-                        }
-
-                        rawYearlyData.push({
-                            year: year,
-                            totalSpend: yearlyTotal,
-                            typeTotals: yearlyTypeTotals
-                        });
+                    const historicalData = processSheetData(histSS, year, globalTypeTotals);
+                    if (historicalData) {
+                        rawYearlyData.push(historicalData);
+                        processedYears.add(year);
                     }
                 } catch (e) {
                     console.error("Could not process file: " + fileName + ". Error: " + e.message);
@@ -382,3 +369,42 @@ function getLastRowIncludingCharts(sheet) {
 }
 
 
+/**
+ * Extracts expense data from a spreadsheet's Summary tab.
+ * 
+ * @param {Spreadsheet} ss - The spreadsheet to process
+ * @param {number} year - The year being processed
+ * @param {Object} globalTypeTotals - Reference to update global type totals
+ * @returns {Object|null} - The processed data object or null if Summary tab not found
+ */
+function processSheetData(ss, year, globalTypeTotals) {
+    const summarySheet = ss.getSheetByName("Summary");
+    if (!summarySheet) return null;
+
+    let yearlyTotal = 0;
+    const yearlyTypeTotals = {};
+
+    const lastRow = summarySheet.getLastRow();
+    if (lastRow >= 3) {
+        // Assume static column offsets: Type (Col 1), Amount (Col 3)
+        // Note: myNumbers.expenseTypeColumn and myNumbers.summaryAmountColumn could be used,
+        // but the logic here matches the original fixed indices (Cols A, B, C)
+        const dataRange = summarySheet.getRange(3, 1, lastRow - 2, 3).getValues();
+        dataRange.forEach(row => {
+            const type = (row[0] || "Uncategorized").toString().trim();
+            const amount = parseFloat(row[2]) || 0;
+
+            if (amount > 0) {
+                yearlyTypeTotals[type] = (yearlyTypeTotals[type] || 0) + amount;
+                globalTypeTotals[type] = (globalTypeTotals[type] || 0) + amount;
+                yearlyTotal += amount;
+            }
+        });
+    }
+
+    return {
+        year: year,
+        totalSpend: yearlyTotal,
+        typeTotals: yearlyTypeTotals
+    };
+}
