@@ -5,7 +5,10 @@ function runAnalytics() {
 
     // 1. Identify current year to include it
     const currentFileName = ss.getName();
-    const currentFileYear = parseInt(currentFileName.split(" ").slice(-1).pop());
+    const currentId = ss.getId();
+    const currentYearMatch = currentFileName.match(/Home payments (\d{4})/);
+    const currentFileYear = currentYearMatch ? parseInt(currentYearMatch[1]) : parseInt(currentFileName.split(" ").slice(-1).pop());
+
     const nowYear = new Date().getFullYear();
     const limitYear = isNaN(currentFileYear) ? nowYear : currentFileYear;
 
@@ -15,7 +18,7 @@ function runAnalytics() {
     const processedYears = new Set();
 
     const currentYearData = processSheetData(ss, currentFileYear, globalTypeTotals);
-    if (currentYearData) {
+    if (currentYearData && !isNaN(currentFileYear)) {
         rawYearlyData.push(currentYearData);
         processedYears.add(currentFileYear);
     }
@@ -25,6 +28,8 @@ function runAnalytics() {
 
     while (files.hasNext()) {
         const file = files.next();
+        if (file.getId() === currentId) continue; // Skip the active spreadsheet
+
         const fileName = file.getName();
         const yearMatch = fileName.match(/Home payments (\d{4})/);
 
