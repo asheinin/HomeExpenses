@@ -52,8 +52,8 @@ function staticNumbers() { // constructor function
   this.dashSpouse1NameColumn = 2;
   this.dashSpouse2NameColumn = 3;
   this.dashAddressColumn = 2;
-
-
+  this.dashSp1SplitColumn = 2;
+  this.dashSp2SplitColumn = 3;
 
 
 
@@ -64,7 +64,7 @@ function staticNumbers() { // constructor function
 
 
 
-  this.dashAmountTotalBeforeSplit = 4;
+  this.dashAmountTotalBeforeSplitColumn = 4;
   this.dashAmountTotalColumn = 5;
   this.dashSp2PartColumn = 6;
   this.dashSp1PartColumn = 7;
