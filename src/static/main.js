@@ -78,7 +78,7 @@ function staticNumbers() { // constructor function
 
   this.summaryHeaderRow = 1
   this.summarySumRow = 2
-  this.summaryMinStartAnalyticsRow = 28;
+  // this.summaryMinStartAnalyticsRow = 28;
 
   this.summaryAmountColumn = 3;
   this.summaryAnalyticsYearColumn = 1;

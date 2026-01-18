@@ -104,7 +104,7 @@ function runAnalytics() {
     const lastRowOfData = summarySheet.getLastRow();
     const existingHeaders = summarySheet.getRange(1, 1, Math.max(lastRowOfData, 1), 25).getValues();
 
-    let startRow = Math.max(lastRowOfData + 5, myNumbers.summaryMinStartAnalyticsRow);
+    let startRow = getLastRowIncludingCharts(summarySheet) + 1;
 
     for (let i = 0; i < existingHeaders.length; i++) {
         const headerVal = existingHeaders[i][myNumbers.summaryAnalyticsYearColumn - 1];
@@ -257,6 +257,7 @@ function runYearComparison() {
     }
 
     const lastRowWithCharts = getLastRowIncludingCharts(summarySheet);
+    const lastRowOfData = summarySheet.getLastRow();
 
     // 4. Extract monthly data from both files' Dashboard tabs
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -288,7 +289,7 @@ function runYearComparison() {
     }
 
     // 6. Write data to sheet (hidden area for chart data source)
-    const dataStartRow = lastRowWithCharts + 3;
+    const dataStartRow = lastRowOfData + 1;
     const dataStartCol = myNumbers.summaryChartsStartColumn;
 
     // Clear any existing comparison data
@@ -310,7 +311,7 @@ function runYearComparison() {
     });
 
     // 8. Create grouped bar chart
-    const chartStartRow = lastRowWithCharts + 3;
+    const chartStartRow = lastRowOfData + 1;
 
     // Find max value for chart scaling
     const allValues = [...currentMonthlyTotals, ...prevMonthlyTotals];
