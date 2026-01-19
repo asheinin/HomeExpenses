@@ -148,12 +148,12 @@ function runAnalytics() {
     trendRange.setFormulas(sparklineFormulas);
 
     // Formatting
-    yearRange.setFontWeight("bold").setBackground("#f8f9fa").setFontColor("#000000");
-    summarySheet.getRange(startRow + 2, trendCol).setFontWeight("bold").setBackground("#f8f9fa").setFontColor("#000000");
+    yearRange.setFontWeight("bold").setBackground("#f8f9fa").setFontColor("#000000").setWrap(true);
+    summarySheet.getRange(startRow + 2, trendCol).setFontWeight("bold").setBackground("#f8f9fa").setFontColor("#000000").setWrap(true);
     const headerRange = summarySheet.getRange(startRow + 2, myNumbers.summaryAnalyticsDataStartColumn, 1, restOfData[0].length);
-    headerRange.setFontWeight("bold").setBackground("#f8f9fa").setFontColor("#000000");
+    headerRange.setFontWeight("bold").setBackground("#f8f9fa").setFontColor("#000000").setWrap(true);
     const numericDataRange = summarySheet.getRange(startRow + 3, myNumbers.summaryAnalyticsDataStartColumn, restOfData.length - 1, restOfData[0].length);
-    numericDataRange.setNumberFormat("$#,##0;;").setFontColor("#000000");
+    numericDataRange.setNumberFormat("$#,##0;;").setFontColor("#000000").setWrap(true);
     //summarySheet.autoResizeColumns(colA, matrixData[0].length);
 
 
