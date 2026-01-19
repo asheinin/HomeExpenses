@@ -305,7 +305,7 @@ function runYearComparison() {
     // 7. Remove existing Year Comparison chart if present
     const charts = summarySheet.getCharts();
     charts.forEach(c => {
-        if (c.getOptions().get('title') === 'Year-Over-Year Monthly Comparison') {
+        if (c.getOptions().get('title') === 'Current vs Previous Year Monthly Comparison') {
             summarySheet.removeChart(c);
         }
     });
