@@ -257,51 +257,9 @@ function runYearComparison() {
     dataRange.setFontColor("#FFFFFF"); // Hide the data (white on white)
     dataRange.setFontSize(1);
 
-    // 7. Remove existing Year Comparison chart if present
-    const charts = summarySheet.getCharts();
-    charts.forEach(c => {
-        if (c.getOptions().get('title') === 'Current vs Previous Year Monthly Comparison') {
-            summarySheet.removeChart(c);
-        }
-    });
-
-    // 8. Create grouped bar chart
+    // 7. Create/Update Chart
     const chartStartRow = lastRowOfData + 3;
-
-    // Find max value for chart scaling
-    const allValues = [...currentMonthlyTotals, ...prevMonthlyTotals];
-    const maxValue = Math.max(...allValues);
-
-    const chartBuilder = summarySheet.newChart()
-        .setChartType(Charts.ChartType.COLUMN)
-        .addRange(dataRange)
-        .setNumHeaders(1)
-        .setOption('title', 'Year-Over-Year Monthly Comparison')
-        .setOption('isStacked', false)
-        .setOption('vAxis', {
-            title: 'Amount ($)',
-            ticks: [0, 3000, 6000, 9000, 12000],
-            viewWindow: { min: 0, max: 12000 },
-            format: '$#,##0'
-        })
-        .setOption('hAxis', {
-            title: 'Month',
-            slantedText: true,
-            slantedTextAngle: 45
-        })
-        .setOption('width', 665)
-        .setOption('height', 280)
-        .setOption('legend', { position: 'top' })
-        .setOption('colors', ['#4285F4', '#BDBDBD']) // Blue for current year, Gray for previous
-        .setOption('bar', { groupWidth: '70%' })
-        .setOption('series', {
-            0: { dataLabel: 'value', dataLabelTextStyle: { fontSize: 9 } },
-            1: { dataLabel: 'value', dataLabelTextStyle: { fontSize: 9 } }
-        })
-        .setPosition(chartStartRow, myNumbers.summaryAnalyticsMonthColumn, 0, 0)
-        .build();
-
-    summarySheet.insertChart(chartBuilder);
+    DrawYoYComparisonChart(summarySheet, dataRange, chartStartRow, currentFileYear, previousYear, myNumbers);
 }
 
 

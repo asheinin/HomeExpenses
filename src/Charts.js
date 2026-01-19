@@ -1,22 +1,36 @@
+/**
+ * Creates and inserts a pie chart of annual expenses into the Summary sheet.
+ * 
+ * @param {number} annualExpenses - The number of expense rows to include in the chart.
+ * @param {number} startRow - The starting row of the expense data in the Summary sheet.
+ */
 function drawAnnualExpensesChart(annualExpenses, startRow) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var summarySheet = ss.getSheetByName("Summary");
+  const myNumbers = new staticNumbers();
 
-  var summarySheet = ss.getSheetByName("Summary")
+  // Ensure we are working on the Summary sheet
   ss.setActiveSheet(summarySheet);
 
-  // Add a pie chart to the summary sheet
+  // Define ranges: Column 1 (Type) and myNumbers.summaryAmountColumn (Amount)
+  var typeRange = summarySheet.getRange(startRow, 1, annualExpenses, 1);
+  var amountRange = summarySheet.getRange(startRow, myNumbers.summaryAmountColumn, annualExpenses, 1);
+
+  // Build the pie chart
   var chartBuilder = summarySheet.newChart()
     .setChartType(Charts.ChartType.PIE)
-    .addRange(summarySheet.getRange(startRow, 1, annualExpenses, 1))
-    .addRange(summarySheet.getRange(startRow, 3, annualExpenses, 1))
-    .setPosition(1, 17, 0, 0)
+    .addRange(typeRange)
+    .addRange(amountRange)
+    .setPosition(1, myNumbers.summaryChartsStartColumn, 0, 0) // Position at row 1, column myNumbers.summaryChartsStartColum
     .setOption('title', 'Annual Expenses')
     .setOption('legend', { position: 'in' })
     .setOption('height', 420)
     .setOption('width', 560)
     .setOption('pieSliceText', 'value')
     .setOption('pieSliceTextStyle', { color: '#FFFFFF', fontName: 'Arial', fontSize: 12, bold: true });
-  summarySheet.insertChart(chartBuilder.build())
+
+  // Insert the chart into the sheet
+  summarySheet.insertChart(chartBuilder.build());
 }
 
 
@@ -36,13 +50,13 @@ function drawAnnualExpensesChart(annualExpenses, startRow) {
 
 function drawHistoricalSpendingChart(summarySheet, startRow, matrixData, restOfData, sortedTopTierTypes, maxTotalSpend, myNumbers) {
   const charts = summarySheet.getCharts();
+  //const myNumbers = new staticNumbers();
+
   charts.forEach(c => {
     if (c.getOptions().get('title') === 'Historical Spending Analysis') {
       summarySheet.removeChart(c);
     }
   });
-
-  const colQ = 17;
 
   // Ranges
   const rangeYear = summarySheet.getRange(startRow + 2, myNumbers.summaryAnalyticsYearColumn, matrixData.length, 1);
@@ -81,7 +95,62 @@ function drawHistoricalSpendingChart(summarySheet, startRow, matrixData, restOfD
     .setOption('height', 434)
     .setOption('series', seriesOptions)
     .setOption('legend', { position: 'right', textStyle: { fontSize: 10 } })
-    .setPosition(startRow + 2, colQ, 0, 0)
+    .setPosition(startRow + 2, myNumbers.summaryChartsStartColumn, 0, 0)
+    .build();
+
+  summarySheet.insertChart(chartBuilder);
+}
+
+
+
+
+/**
+ * Creates or updates the Year-Over-Year Monthly Comparison chart.
+ * 
+ * @param {Sheet} summarySheet - The sheet to insert the chart into
+ * @param {Range} dataRange - The range containing the comparison data
+ * @param {number} chartStartRow - The row where the chart should be positioned
+ * @param {number} currentFileYear - The year of the current data
+ * @param {number} previousYear - The year of the historical data
+ * @param {Object} myNumbers - Static numbers config
+ */
+function DrawYoYComparisonChart(summarySheet, dataRange, chartStartRow, currentFileYear, previousYear, myNumbers) {
+  // Remove existing Year Comparison chart if present
+  const charts = summarySheet.getCharts();
+  charts.forEach(c => {
+    if (c.getOptions().get('title') === 'Year-Over-Year Monthly Comparison' ||
+      c.getOptions().get('title') === 'Current vs Previous Year Monthly Comparison') {
+      summarySheet.removeChart(c);
+    }
+  });
+
+  const chartBuilder = summarySheet.newChart()
+    .setChartType(Charts.ChartType.COLUMN)
+    .addRange(dataRange)
+    .setNumHeaders(1)
+    .setOption('title', 'Year-Over-Year Monthly Comparison')
+    .setOption('isStacked', false)
+    .setOption('vAxis', {
+      title: 'Amount ($)',
+      ticks: [0, 3000, 6000, 9000, 12000],
+      viewWindow: { min: 0, max: 12000 },
+      format: '$#,##0'
+    })
+    .setOption('hAxis', {
+      title: 'Month',
+      slantedText: true,
+      slantedTextAngle: 45
+    })
+    .setOption('width', 665)
+    .setOption('height', 280)
+    .setOption('legend', { position: 'top' })
+    .setOption('colors', ['#4285F4', '#BDBDBD']) // Blue for current year, Gray for previous
+    .setOption('bar', { groupWidth: '70%' })
+    .setOption('series', {
+      0: { dataLabel: 'value', dataLabelTextStyle: { fontSize: 9 } },
+      1: { dataLabel: 'value', dataLabelTextStyle: { fontSize: 9 } }
+    })
+    .setPosition(chartStartRow, myNumbers.summaryAnalyticsMonthColumn, 0, 0)
     .build();
 
   summarySheet.insertChart(chartBuilder);
@@ -118,32 +187,3 @@ function getLastRowIncludingCharts(sheet) {
 }
 
 
-// help: https://ctrlq.org/code/20094-google-charts-dashboard-with-google-sheets
-
-/*
-
-function graph(annualExpenses) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  
-  var summarySheet = ss.getSheetByName("Summary")
-  ss.setActiveSheet(summarySheet);
-
-// Add a pie chart to the summary sheet
-  var chartBuilder = summarySheet.newChart()
-    .setChartType(Charts.ChartType.PIE)
-    .addRange(summarySheet.getRange(3, 1, annualExpenses.length-2, 1))
-    .addRange(summarySheet.getRange(3, 3, annualExpenses.length-2, 1))
-    .setPosition(1, 17, 0, 0)
-    .setOption('title', 'Annual Expenses')
-    .setOption('legend', {position: 'in'})
-    .setOption('height', 600)
-    .setOption('width', 800)
-    .setOption('pieSliceText', 'value')
-    .setOption('pieSliceTextStyle', {color: '#FFFFFF', fontName: 'Arial', fontSize: 12, bold: true});
-  summarySheet.insertChart(chartBuilder.build())
-
-}  
-
-// help: https://ctrlq.org/code/20094-google-charts-dashboard-with-google-sheets
-
-*/
