@@ -205,7 +205,7 @@ function open() {
 
 
   //set triggers if not set
-  if (ScriptApp.getProjectTriggers().length < 3) {
+  if (ScriptApp.getProjectTriggers().length < 4) {
     // Deletes all triggers in the current project.
     var triggers = ScriptApp.getProjectTriggers();
     for (var i = 0; i < triggers.length; i++) {
@@ -227,6 +227,13 @@ function open() {
       .forSpreadsheet(ss)
       .onEdit()
       .create();
+
+    ScriptApp.newTrigger('Summary')
+      .timeBased()
+      .everyDays(1) // Specifies a daily recurrence
+      .atHour(0)    // Sets the trigger to run within the 12 AM to 1 AM hour range (0 in 24-hour time)
+      .create();
+
   }
 }
 
@@ -245,7 +252,7 @@ function edit() {
 
   activeCell.setFontFamily('arial').setFontSize('10');
 
-  
+
   if (sheetName == 'Summary') return;
 
   if (rsName == sheetName) {
