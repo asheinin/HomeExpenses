@@ -9,8 +9,8 @@ function drawAnnualExpensesChart(annualExpenses, startRow) {
   var summarySheet = ss.getSheetByName("Summary");
   const myNumbers = new staticNumbers();
 
-  // Define ranges: Column 1 (Type) and myNumbers.summaryAmountColumn (Amount)
-  var typeRange = summarySheet.getRange(startRow, 1, annualExpenses, 1);
+  // Define ranges: Column same as expenseTypeColumn and summaryAmountColumn (Amount)
+  var typeRange = summarySheet.getRange(startRow, myNumbers.expenseTypeColumn, annualExpenses, 1);
   var amountRange = summarySheet.getRange(startRow, myNumbers.summaryAmountColumn, annualExpenses, 1);
 
   // Build the pie chart
