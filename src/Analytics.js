@@ -36,7 +36,7 @@ function runAnalytics() {
         if (yearMatch) {
             const year = parseInt(yearMatch[1]);
             // Skip current year (already processed) and any duplicates
-            if (year <= limitYear && !processedYears.has(year)) {
+            if (year < limitYear && !processedYears.has(year)) {
                 try {
                     const histSS = SpreadsheetApp.open(file);
                     const historicalData = processSheetData(histSS, year, globalTypeTotals);
@@ -201,8 +201,8 @@ function runAnalytics() {
             viewWindow: { max: maxTotalSpend * 1.15 } // Add 15% padding at the top for labels
         })
         .setOption('hAxis.title', 'Year')
-        .setOption('width', 950)
-        .setOption('height', 620)
+        .setOption('width', 665)
+        .setOption('height', 434)
         .setOption('series', seriesOptions)
         .setOption('legend', { position: 'right', textStyle: { fontSize: 10 } })
         .setPosition(startRow + 2, colQ, 0, 0)
@@ -334,8 +334,8 @@ function runYearComparison() {
             slantedText: true,
             slantedTextAngle: 45
         })
-        .setOption('width', 950)
-        .setOption('height', 400)
+        .setOption('width', 665)
+        .setOption('height', 280)
         .setOption('legend', { position: 'top' })
         .setOption('colors', ['#4285F4', '#BDBDBD']) // Blue for current year, Gray for previous
         .setOption('bar', { groupWidth: '70%' })
