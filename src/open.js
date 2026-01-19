@@ -189,7 +189,7 @@ function open() {
   ui.createMenu('General Actions')
     .addItem("Rebalance YTD", "rebalanceExpenses")
     .addSeparator()
-    .addItem("Calculate YTD Totals", "summaryExpenses")
+    .addItem("Calculate YTD Totals", "Summary")
     .addSeparator()
     .addItem("Create Next Year File", "createNewFile")
     .addItem("Tax Receipt", "createEOYDocument")
