@@ -1,4 +1,4 @@
-function runAnnualExpensesChart(annualExpenses, startRow) {
+function drawAnnualExpensesChart(annualExpenses, startRow) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
 
   var summarySheet = ss.getSheetByName("Summary")
@@ -19,6 +19,9 @@ function runAnnualExpensesChart(annualExpenses, startRow) {
   summarySheet.insertChart(chartBuilder.build())
 }
 
+
+
+
 /**
  * Creates or updates the Historical Spending Analysis chart.
  * 
@@ -30,6 +33,7 @@ function runAnnualExpensesChart(annualExpenses, startRow) {
  * @param {number} maxTotalSpend - Maximum spending value for chart scaling
  * @param {Object} myNumbers - Static numbers config
  */
+
 function drawHistoricalSpendingChart(summarySheet, startRow, matrixData, restOfData, sortedTopTierTypes, maxTotalSpend, myNumbers) {
   const charts = summarySheet.getCharts();
   charts.forEach(c => {
@@ -83,11 +87,17 @@ function drawHistoricalSpendingChart(summarySheet, startRow, matrixData, restOfD
   summarySheet.insertChart(chartBuilder);
 }
 
+
+
+
 /**
  * Helper function to calculate the last row including all chart positions.
  * @param {Sheet} sheet - The sheet to analyze
  * @returns {number} - The last row occupied by data or charts
  */
+
+
+
 function getLastRowIncludingCharts(sheet) {
   let lastRow = sheet.getLastRow();
   const charts = sheet.getCharts();
