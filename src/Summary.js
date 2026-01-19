@@ -1,4 +1,11 @@
 function Summary() {
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const summarySheet = ss.getSheetByName("Summary");
+
+  // Ensure we are working on the Summary sheet
+  ss.setActiveSheet(summarySheet);
+
   // Generate the monthly expense summary data
   summaryExpenses();
 
