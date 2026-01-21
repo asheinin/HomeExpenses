@@ -251,6 +251,10 @@ function runYearComparison() {
     const existingDataRange = summarySheet.getRange(dataStartRow, dataStartCol, 15, 3);
     existingDataRange.clearContent();
 
+    //Clear header format
+    const headerRange = summarySheet.getRange(dataStartRow, dataStartCol, 1, 3);
+    headerRange.clearFormat();
+
     // Write new data
     const dataRange = summarySheet.getRange(dataStartRow, dataStartCol, comparisonData.length, 3);
     dataRange.setValues(comparisonData);
