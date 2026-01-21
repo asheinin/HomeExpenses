@@ -205,7 +205,7 @@ function open() {
 
 
   //set triggers if not set
-  if (ScriptApp.getProjectTriggers().length < 4) {
+  if (ScriptApp.getProjectTriggers().length < 5) {
     // Deletes all triggers in the current project.
     var triggers = ScriptApp.getProjectTriggers();
     for (var i = 0; i < triggers.length; i++) {
@@ -216,6 +216,12 @@ function open() {
       .timeBased()
       .onMonthDay(5)
       .atHour(8)
+      .create();
+
+    ScriptApp.newTrigger('sendMonthlySummaryEmail')
+      .timeBased()
+      .onMonthDay(1)
+      .atHour(9)
       .create();
 
     ScriptApp.newTrigger('open')

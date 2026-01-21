@@ -93,8 +93,8 @@ function processDeleteForm(expenseName, mode) {
 
       if (existingIndex !== -1) {
         var row = existingIndex + myNumbers.expenseFirstRow;
-        // Clear the entire row content for this expense (columns 1 through expenseAmountColumn + some extra)
-        var numColsToClear = myNumbers.expensePaidColumn; // Clear up to the Paid column
+        // Clear the entire row content for this expense
+        var numColsToClear = myNumbers.expensePAPColumn; // Clear up to the PAP column
         sheet.getRange(row, 1, 1, numColsToClear).clearContent();
         deletedCount++;
       }
