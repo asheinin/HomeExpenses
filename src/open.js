@@ -193,6 +193,8 @@ function open() {
     .addSeparator()
     .addItem("Create Next Year File", "createNewFile")
     .addItem("Tax Receipt", "createEOYDocument")
+    .addSeparator()
+    .addItem("Set Gemini API Key", "setGeminiApiKey")
     .addToUi();
 
 
