@@ -257,6 +257,9 @@ function runYearComparison() {
     dataRange.setFontColor("#FFFFFF"); // Hide the data (white on white)
     dataRange.setFontSize(1);
 
+    // Explicitly set headers to plain text to avoid currency formatting in the chart legend
+    summarySheet.getRange(dataStartRow, dataStartCol, 1, 3).setNumberFormat("@");
+
     // 7. Create/Update Chart
     const chartStartRow = lastRowOfData + 3;
     DrawYoYComparisonChart(summarySheet, dataRange, chartStartRow, currentFileYear, previousYear, myNumbers);
