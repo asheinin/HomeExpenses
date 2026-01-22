@@ -90,6 +90,11 @@ function staticNumbers() { // constructor function
   this.dashBalancePositiveBgColor = "green";
   this.dashBalanceNeutralBgColor = "green";
 
+  // Expense Analysis Agent - Non-posted monthly projections
+  this.agentGroceriesMonthly = 800;
+  this.agentOnlinePurchasesMonthly = 800;
+  this.agentGasolineMonthly = 400;
+
   this.privilegedMethod = function () {
     alert();
   };

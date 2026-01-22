@@ -184,6 +184,11 @@ function open() {
 
   }
 
+  ui.createMenu('AI playground')
+    .addItem("Run Expense Analysis Agent", "runExpenseAnalysisAgent")
+    .addSeparator()
+    .addItem("Set Gemini API Key", "setGeminiApiKey")
+    .addToUi();
 
 
   ui.createMenu('General Actions')
@@ -193,8 +198,6 @@ function open() {
     .addSeparator()
     .addItem("Create Next Year File", "createNewFile")
     .addItem("Tax Receipt", "createEOYDocument")
-    .addSeparator()
-    .addItem("Set Gemini API Key", "setGeminiApiKey")
     .addToUi();
 
 
