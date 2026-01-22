@@ -621,19 +621,423 @@ function displayAgentResults(results, myNumbers) {
 
 
 /**
- * Web App entry point for external calls.
- * Deploy this script as a web app to call from other Apps Scripts.
+ * Web App entry point - serves the mobile-responsive HTML page.
+ * Deploy this script as a web app to access from any browser.
  * 
  * @param {Object} e - Event object from web request
- * @returns {TextOutput} - JSON response with analysis results
+ * @returns {HtmlOutput} - Full HTML page with analysis
  */
 function doGet(e) {
     try {
         const results = runExpenseAnalysisAgent(true);
-        return ContentService.createTextOutput(JSON.stringify(results))
-            .setMimeType(ContentService.MimeType.JSON);
+        return HtmlService.createHtmlOutput(generateWebAppHtml(results))
+            .setTitle('Expense Analysis')
+            .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
     } catch (error) {
-        return ContentService.createTextOutput(JSON.stringify({ error: error.toString() }))
-            .setMimeType(ContentService.MimeType.JSON);
+        return HtmlService.createHtmlOutput(`<h1>Error</h1><p>${error.toString()}</p>`);
     }
+}
+
+
+/**
+ * Handles POST requests for recalculation with custom assumptions.
+ * 
+ * @param {Object} e - Event object with form parameters
+ * @returns {HtmlOutput} - Updated HTML page with new calculations
+ */
+function doPost(e) {
+    try {
+        const params = e.parameter;
+        const customAssumptions = {
+            groceries: parseFloat(params.groceries) || 0,
+            onlinePurchases: parseFloat(params.onlinePurchases) || 0,
+            gasoline: parseFloat(params.gasoline) || 0,
+            misc: parseFloat(params.misc) || 0
+        };
+
+        const myNumbers = new staticNumbers();
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const now = new Date();
+        const currentMonthIndex = now.getMonth();
+        const currentMonthName = months[currentMonthIndex];
+        const currentYear = now.getFullYear();
+
+        const prevMonthDate = new Date(currentYear, currentMonthIndex - 1, 1);
+        const prevMonthIndex = prevMonthDate.getMonth();
+        const prevMonthYear = prevMonthDate.getFullYear();
+
+        const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+        const comparisonData = getMonthlyComparisonData(
+            ss, currentMonthIndex, currentYear, prevMonthIndex, prevMonthYear, myNumbers, months
+        );
+
+        const forecastData = calculateAnnualForecast(
+            ss, currentMonthIndex, currentYear, myNumbers, months, customAssumptions
+        );
+
+        const spikeAnalysis = detectExpenseSpikes(
+            comparisonData.current, comparisonData.yearAgo, myNumbers
+        );
+
+        const aiAnalysis = generateAgentAnalysis(comparisonData, forecastData, spikeAnalysis);
+
+        const results = {
+            timestamp: now.toISOString(),
+            currentMonth: currentMonthName,
+            currentYear: currentYear,
+            comparison: comparisonData,
+            forecast: forecastData,
+            spikes: spikeAnalysis,
+            aiInsights: aiAnalysis
+        };
+
+        return HtmlService.createHtmlOutput(generateWebAppHtml(results))
+            .setTitle('Expense Analysis')
+            .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    } catch (error) {
+        return HtmlService.createHtmlOutput(`<h1>Error</h1><p>${error.toString()}</p>`);
+    }
+}
+
+
+/**
+ * Generates mobile-responsive HTML for the web app.
+ * 
+ * @param {Object} results - Analysis results object
+ * @returns {string} - Complete HTML page
+ */
+function generateWebAppHtml(results) {
+    const formatCurrency = (val) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(val || 0);
+
+    let html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Expense Analysis - ${results.currentMonth} ${results.currentYear}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 16px;
+            color: #333;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        
+        .header {
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .header h1 { font-size: 24px; color: #333; margin-bottom: 4px; }
+        .header .date { color: #667eea; font-weight: 600; font-size: 16px; }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #555;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .metric:last-of-type { border-bottom: none; }
+        .metric-label { color: #666; font-size: 14px; }
+        .metric-value { font-weight: 700; font-size: 16px; }
+        .metric-value.big { font-size: 24px; color: #667eea; }
+        .positive { color: #2E7D32; }
+        .negative { color: #D32F2F; }
+        
+        .spike { 
+            background: #FFEBEE; 
+            border-left: 4px solid #D32F2F; 
+            padding: 12px 16px; 
+            margin: 8px 0; 
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .above-normal { 
+            background: #FFF3E0; 
+            border-left: 4px solid #FF9800; 
+            padding: 12px 16px; 
+            margin: 8px 0; 
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .ai-card {
+            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .ai-title { font-size: 16px; font-weight: 700; color: #2E7D32; margin-bottom: 12px; }
+        .ai-card ul { padding-left: 20px; }
+        .ai-card li { margin-bottom: 10px; line-height: 1.5; font-size: 14px; }
+        
+        .assumptions-card {
+            background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 2px solid #FFB74D;
+        }
+        .assumptions-title { font-size: 16px; font-weight: 700; color: #F57C00; margin-bottom: 16px; }
+        
+        .input-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+        .input-label { font-size: 14px; color: #666; }
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .input-wrapper span { color: #666; font-size: 16px; }
+        input[type="number"] {
+            width: 100px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: right;
+            -webkit-appearance: none;
+        }
+        input[type="number"]:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            margin-top: 8px;
+            border-top: 2px solid #FFB74D;
+            font-weight: 700;
+            color: #F57C00;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 12px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .submit-btn:active { opacity: 0.9; transform: scale(0.98); }
+        
+        .footer {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            padding: 16px;
+        }
+        
+        @media (max-width: 400px) {
+            body { padding: 12px; }
+            .card, .ai-card, .assumptions-card { padding: 16px; }
+            .header h1 { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Expense Analysis</h1>
+            <div class="date">${results.currentMonth} ${results.currentYear}</div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">Monthly Comparison</div>
+            <div class="metric">
+                <span class="metric-label">Current Month Total</span>
+                <span class="metric-value">${formatCurrency(results.comparison.current?.totalSpend)}</span>
+            </div>`;
+
+    if (results.comparison.vsPrevMonth) {
+        const pct = parseFloat(results.comparison.vsPrevMonth.percentChange);
+        const colorClass = pct > 0 ? 'negative' : 'positive';
+        const sign = pct > 0 ? '+' : '';
+        html += `
+            <div class="metric">
+                <span class="metric-label">vs ${results.comparison.previousMonthName} ${results.comparison.previousMonthYear}</span>
+                <span class="metric-value ${colorClass}">${sign}${results.comparison.vsPrevMonth.percentChange}%</span>
+            </div>`;
+    }
+
+    if (results.comparison.vsYearAgo) {
+        const pct = parseFloat(results.comparison.vsYearAgo.percentChange);
+        const colorClass = pct > 0 ? 'negative' : 'positive';
+        const sign = pct > 0 ? '+' : '';
+        html += `
+            <div class="metric">
+                <span class="metric-label">vs ${results.comparison.currentMonthName} ${results.comparison.yearAgoYear} (YoY)</span>
+                <span class="metric-value ${colorClass}">${sign}${results.comparison.vsYearAgo.percentChange}%</span>
+            </div>`;
+    }
+
+    html += `
+        </div>
+        
+        <div class="card">
+            <div class="card-title">Annual Forecast</div>
+            <div class="metric">
+                <span class="metric-label">YTD Posted (${results.forecast.monthsCompleted} months)</span>
+                <span class="metric-value">${formatCurrency(results.forecast.ytdPosted)}</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Projected Annual Total</span>
+                <span class="metric-value big">${formatCurrency(results.forecast.annualForecast)}</span>
+            </div>`;
+
+    if (results.forecast.vsLastYear.percentChange) {
+        const pct = parseFloat(results.forecast.vsLastYear.percentChange);
+        const colorClass = pct > 0 ? 'negative' : 'positive';
+        const sign = pct > 0 ? '+' : '';
+        html += `
+            <div class="metric">
+                <span class="metric-label">vs Last Year (${formatCurrency(results.forecast.previousYearTotal)})</span>
+                <span class="metric-value ${colorClass}">${sign}${results.forecast.vsLastYear.percentChange}%</span>
+            </div>`;
+    }
+
+    html += `
+        </div>`;
+
+    // Spike alerts
+    if (results.spikes.hasAnomalies) {
+        html += `
+        <div class="card">
+            <div class="card-title">⚠️ Expense Alerts</div>`;
+
+        results.spikes.spikes.forEach(s => {
+            html += `
+            <div class="spike">
+                <strong>${s.category}</strong>
+                <span style="color: #D32F2F;">+${s.percentChange}%</span>
+            </div>`;
+        });
+
+        results.spikes.aboveNormal.forEach(s => {
+            html += `
+            <div class="above-normal">
+                <strong>${s.category}</strong>
+                <span style="color: #FF9800;">+${s.percentChange}%</span>
+            </div>`;
+        });
+
+        html += `</div>`;
+    }
+
+    // AI Insights
+    if (results.aiInsights) {
+        html += `
+        <div class="ai-card">
+            <div class="ai-title">🤖 AI Analysis</div>
+            <div>${results.aiInsights}</div>
+        </div>`;
+    }
+
+    // Assumptions form
+    html += `
+        <form method="POST" action="">
+            <div class="assumptions-card">
+                <div class="assumptions-title">📝 Forecast Assumptions (Monthly)</div>
+                
+                <div class="input-row">
+                    <span class="input-label">Groceries</span>
+                    <div class="input-wrapper">
+                        <span>$</span>
+                        <input type="number" name="groceries" id="groceries" value="${results.forecast.nonPostedBreakdown.groceries}" min="0" step="50">
+                    </div>
+                </div>
+                
+                <div class="input-row">
+                    <span class="input-label">Online Purchases</span>
+                    <div class="input-wrapper">
+                        <span>$</span>
+                        <input type="number" name="onlinePurchases" id="onlinePurchases" value="${results.forecast.nonPostedBreakdown.onlinePurchases}" min="0" step="50">
+                    </div>
+                </div>
+                
+                <div class="input-row">
+                    <span class="input-label">Gasoline</span>
+                    <div class="input-wrapper">
+                        <span>$</span>
+                        <input type="number" name="gasoline" id="gasoline" value="${results.forecast.nonPostedBreakdown.gasoline}" min="0" step="50">
+                    </div>
+                </div>
+                
+                <div class="input-row">
+                    <span class="input-label">Miscellaneous</span>
+                    <div class="input-wrapper">
+                        <span>$</span>
+                        <input type="number" name="misc" id="misc" value="${results.forecast.nonPostedBreakdown.misc}" min="0" step="50">
+                    </div>
+                </div>
+                
+                <div class="total-row">
+                    <span>Total Monthly</span>
+                    <span id="totalMonthly">$${results.forecast.nonPostedMonthly.toLocaleString()}</span>
+                </div>
+                
+                <button type="submit" class="submit-btn">🔄 Recalculate Forecast</button>
+            </div>
+        </form>
+        
+        <div class="footer">
+            Generated by Expense Analysis Agent<br>
+            ${new Date().toLocaleDateString('en-CA')}
+        </div>
+    </div>
+    
+    <script>
+        function updateTotal() {
+            var g = parseFloat(document.getElementById('groceries').value) || 0;
+            var o = parseFloat(document.getElementById('onlinePurchases').value) || 0;
+            var ga = parseFloat(document.getElementById('gasoline').value) || 0;
+            var m = parseFloat(document.getElementById('misc').value) || 0;
+            document.getElementById('totalMonthly').textContent = '$' + (g + o + ga + m).toLocaleString();
+        }
+        ['groceries', 'onlinePurchases', 'gasoline', 'misc'].forEach(function(id) {
+            document.getElementById(id).addEventListener('input', updateTotal);
+        });
+    </script>
+</body>
+</html>`;
+
+    return html;
 }
