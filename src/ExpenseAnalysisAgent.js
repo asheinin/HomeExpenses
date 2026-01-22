@@ -394,7 +394,7 @@ EXPENSE ANOMALIES:`;
  * (Interactive version for spreadsheet use)
  */
 function displayAgentResults(results, myNumbers) {
-    const html = generateAgentHtml(results, { isReadOnly: false, isStandalone: false });
+    const html = generateAgentHtml(results, { isReadOnly: false, isStandalone: false, isEmbedded: false });
 
     const htmlOutput = HtmlService.createHtmlOutput(html)
         .setWidth(500)
@@ -411,7 +411,12 @@ function displayAgentResults(results, myNumbers) {
 function doGet(e) {
     try {
         const results = runExpenseAnalysisAgent(true);
-        const html = generateAgentHtml(results, { isReadOnly: true, isStandalone: true });
+        const isEmbedded = e && e.parameter && e.parameter.embed === 'true';
+        const html = generateAgentHtml(results, {
+            isReadOnly: true,
+            isStandalone: !isEmbedded,
+            isEmbedded: isEmbedded
+        });
 
         return HtmlService.createHtmlOutput(html)
             .setTitle('Expense Analysis')
@@ -437,12 +442,13 @@ function doPost(e) {
  * Unified HTML generator for both spreadsheet dialog and web app.
  * 
  * @param {Object} results - Analysis results object
- * @param {Object} options - { isReadOnly: boolean, isStandalone: boolean }
+ * @param {Object} options - { isReadOnly: boolean, isStandalone: boolean, isEmbedded: boolean }
  * @returns {string} - Complete HTML page
  */
 function generateAgentHtml(results, options) {
     const isReadOnly = options.isReadOnly || false;
     const isStandalone = options.isStandalone || false;
+    const isEmbedded = options.isEmbedded || false;
     const formatCurrency = (val) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(val || 0);
 
     let html = `<!DOCTYPE html>
@@ -455,29 +461,30 @@ function generateAgentHtml(results, options) {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: ${isStandalone ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#fff'};
+            background: ${isEmbedded ? 'transparent' : (isStandalone ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#fff')};
             min-height: 100vh;
-            padding: ${isStandalone ? '12px' : '0'};
+            padding: ${isEmbedded ? '0' : (isStandalone ? '12px' : '0')};
             color: #333;
             overflow-x: hidden;
         }
         .container { 
             max-width: 600px; 
             margin: 0 auto;
-            background: ${isStandalone ? 'transparent' : '#fff'};
+            background: ${isStandalone || isEmbedded ? 'transparent' : '#fff'};
         }
         
         .header {
-            background: ${isStandalone ? 'rgba(255,255,255,0.95)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
-            color: ${isStandalone ? '#333' : 'white'};
-            border-radius: ${isStandalone ? '16px' : '0 0 16px 16px'};
+            background: ${isStandalone || isEmbedded ? 'rgba(255,255,255,0.95)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
+            color: ${isStandalone || isEmbedded ? '#333' : 'white'};
+            border-radius: ${isStandalone || isEmbedded ? '16px' : '0 0 16px 16px'};
             padding: 20px;
             text-align: center;
             margin-bottom: 16px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            ${isEmbedded ? 'margin-top: 5px;' : ''}
         }
-        .header h1 { font-size: 22px; margin-bottom: 4px; }
-        .header .date { color: ${isStandalone ? '#667eea' : 'rgba(255,255,255,0.9)'}; font-weight: 600; font-size: 15px; }
+        .header h1 { font-size: 20px; margin-bottom: 4px; }
+        .header .date { color: ${isStandalone || isEmbedded ? '#667eea' : 'rgba(255,255,255,0.9)'}; font-weight: 600; font-size: 14px; }
         
         .card {
             background: white;
@@ -553,7 +560,7 @@ function generateAgentHtml(results, options) {
         .recalculate-btn:disabled { opacity: 0.6; }
 
         .footer {
-            text-align: center; color: ${isStandalone ? 'rgba(255,255,255,0.7)' : '#999'};
+            text-align: center; color: ${isStandalone || isEmbedded ? 'rgba(0,0,0,0.5)' : '#999'};
             font-size: 11px; padding: 10px;
         }
     </style>
@@ -708,3 +715,4 @@ function generateAgentHtml(results, options) {
     html += `</body></html>`;
     return html;
 }
+
