@@ -413,7 +413,7 @@ function doGet(e) {
         const results = runExpenseAnalysisAgent(true);
         const isEmbedded = e && e.parameter && e.parameter.embed === 'true';
         const html = generateAgentHtml(results, {
-            isReadOnly: true,
+            isReadOnly: false,
             isStandalone: !isEmbedded,
             isEmbedded: isEmbedded
         });
@@ -761,6 +761,10 @@ function generateAgentHtml(results, options) {
             google.script.run
                 .withSuccessHandler(function() {
                     toggleAssumptions(false);
+                    // If in a Web App context, refreshing the page shows the updated forecast results
+                    if (window.location.href.indexOf('macros/s/') !== -1) {
+                        window.top.location.reload();
+                    }
                 })
                 .withFailureHandler(function(err) {
                     alert('Error: ' + err);
