@@ -413,7 +413,7 @@ function doGet(e) {
         const results = runExpenseAnalysisAgent(true);
         const isEmbedded = e && e.parameter && e.parameter.embed === 'true';
         const html = generateAgentHtml(results, {
-            isReadOnly: false,
+            isReadOnly: true,
             isStandalone: !isEmbedded,
             isEmbedded: isEmbedded
         });
