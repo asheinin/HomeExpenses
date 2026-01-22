@@ -398,7 +398,7 @@ function displayAgentResults(results, myNumbers) {
 
     const htmlOutput = HtmlService.createHtmlOutput(html)
         .setWidth(500)
-        .setHeight(780);
+        .setHeight(600);
 
     SpreadsheetApp.getUi().showModalDialog(htmlOutput, 'Expense Analysis Agent');
 }
