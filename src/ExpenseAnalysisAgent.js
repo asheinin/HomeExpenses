@@ -391,226 +391,10 @@ EXPENSE ANOMALIES:`;
 
 /**
  * Displays agent results in a formatted HTML dialog.
+ * (Interactive version for spreadsheet use)
  */
 function displayAgentResults(results, myNumbers) {
-    const formatCurrency = (val) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(val || 0);
-
-    let html = `
-    <style>
-      body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 20px; color: #333; }
-      .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; margin: -20px -20px 20px -20px; text-align: center; }
-      .header h2 { margin: 0; font-size: 20px; }
-      .header .date { font-size: 12px; opacity: 0.9; margin-top: 5px; }
-      .section { background: #f9f9f9; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-      .section-title { font-size: 14px; font-weight: bold; color: #555; margin-bottom: 10px; border-bottom: 2px solid #667eea; padding-bottom: 5px; }
-      .metric { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-      .metric:last-child { border-bottom: none; }
-      .metric-label { color: #666; }
-      .metric-value { font-weight: bold; }
-      .positive { color: #2E7D32; }
-      .negative { color: #D32F2F; }
-      .neutral { color: #666; }
-      .spike { background: #FFEBEE; border-left: 4px solid #D32F2F; padding: 8px 12px; margin: 5px 0; border-radius: 0 4px 4px 0; }
-      .above-normal { background: #FFF3E0; border-left: 4px solid #FF9800; padding: 8px 12px; margin: 5px 0; border-radius: 0 4px 4px 0; }
-      .ai-section { background: #E8F5E9; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-      .ai-title { font-size: 14px; font-weight: bold; color: #2E7D32; margin-bottom: 10px; }
-      ul { margin: 0; padding-left: 20px; }
-      li { margin-bottom: 8px; line-height: 1.5; }
-      
-      /* Editable assumptions styles */
-      .assumptions-section { background: #FFF8E1; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid #FFE082; }
-      .assumptions-title { font-size: 14px; font-weight: bold; color: #F57C00; margin-bottom: 10px; border-bottom: 2px solid #FFB74D; padding-bottom: 5px; }
-      .assumption-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
-      .assumption-label { color: #666; font-size: 13px; flex: 1; }
-      .assumption-input { width: 100px; padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; text-align: right; }
-      .assumption-input:focus { border-color: #667eea; outline: none; box-shadow: 0 0 3px rgba(102, 126, 234, 0.3); }
-      .recalculate-btn { 
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-        color: white; 
-        border: none; 
-        padding: 10px 20px; 
-        border-radius: 6px; 
-        cursor: pointer; 
-        font-size: 13px; 
-        font-weight: bold;
-        width: 100%;
-        margin-top: 10px;
-        transition: opacity 0.2s;
-      }
-      .recalculate-btn:hover { opacity: 0.9; }
-      .recalculate-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-      .assumption-total { font-weight: bold; color: #F57C00; padding-top: 8px; border-top: 1px solid #FFE082; margin-top: 8px; }
-    </style>
-
-    <div class="header">
-      <h2>📊 Expense Analysis Report</h2>
-      <div class="date">${results.currentMonth} ${results.currentYear}</div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Monthly Comparison</div>
-      <div class="metric">
-        <span class="metric-label">Current Month Total</span>
-        <span class="metric-value">${formatCurrency(results.comparison.current?.totalSpend)}</span>
-      </div>`;
-
-    if (results.comparison.vsPrevMonth) {
-        const pct = parseFloat(results.comparison.vsPrevMonth.percentChange);
-        const colorClass = pct > 0 ? 'negative' : 'positive';
-        const sign = pct > 0 ? '+' : '';
-        html += `
-      <div class="metric">
-        <span class="metric-label">vs ${results.comparison.previousMonthName} ${results.comparison.previousMonthYear}</span>
-        <span class="metric-value ${colorClass}">${sign}${results.comparison.vsPrevMonth.percentChange}%</span>
-      </div>`;
-    }
-
-    if (results.comparison.vsYearAgo) {
-        const pct = parseFloat(results.comparison.vsYearAgo.percentChange);
-        const colorClass = pct > 0 ? 'negative' : 'positive';
-        const sign = pct > 0 ? '+' : '';
-        html += `
-      <div class="metric">
-        <span class="metric-label">vs ${results.comparison.currentMonthName} ${results.comparison.yearAgoYear} (YoY)</span>
-        <span class="metric-value ${colorClass}">${sign}${results.comparison.vsYearAgo.percentChange}%</span>
-      </div>`;
-    }
-
-    html += `
-    </div>
-
-    <div class="section">
-      <div class="section-title">Annual Forecast</div>
-      <div class="metric">
-        <span class="metric-label">YTD Posted (${results.forecast.monthsCompleted} months)</span>
-        <span class="metric-value">${formatCurrency(results.forecast.ytdPosted)}</span>
-      </div>
-      <div class="metric">
-        <span class="metric-label">Projected Annual Total</span>
-        <span class="metric-value" style="font-size: 18px; color: #667eea;">${formatCurrency(results.forecast.annualForecast)}</span>
-      </div>`;
-
-    if (results.forecast.vsLastYear.percentChange) {
-        const pct = parseFloat(results.forecast.vsLastYear.percentChange);
-        const colorClass = pct > 0 ? 'negative' : 'positive';
-        const sign = pct > 0 ? '+' : '';
-        html += `
-      <div class="metric">
-        <span class="metric-label">vs Last Year (${formatCurrency(results.forecast.previousYearTotal)})</span>
-        <span class="metric-value ${colorClass}">${sign}${results.forecast.vsLastYear.percentChange}%</span>
-      </div>`;
-    }
-
-    html += `
-      <div class="metric">
-        <span class="metric-label">Monthly Non-Posted Estimate</span>
-        <span class="metric-value neutral">${formatCurrency(results.forecast.nonPostedMonthly)}</span>
-      </div>
-    </div>
-    
-    <div class="assumptions-section">
-      <div class="assumptions-title">📝 Forecast Assumptions (Monthly)</div>
-      <div class="assumption-row">
-        <span class="assumption-label">Groceries</span>
-        <span>$</span><input type="number" id="groceries" class="assumption-input" value="${results.forecast.nonPostedBreakdown.groceries}" min="0" step="50">
-      </div>
-      <div class="assumption-row">
-        <span class="assumption-label">Online Purchases</span>
-        <span>$</span><input type="number" id="onlinePurchases" class="assumption-input" value="${results.forecast.nonPostedBreakdown.onlinePurchases}" min="0" step="50">
-      </div>
-      <div class="assumption-row">
-        <span class="assumption-label">Gasoline</span>
-        <span>$</span><input type="number" id="gasoline" class="assumption-input" value="${results.forecast.nonPostedBreakdown.gasoline}" min="0" step="50">
-      </div>
-      <div class="assumption-row">
-        <span class="assumption-label">Miscellaneous</span>
-        <span>$</span><input type="number" id="misc" class="assumption-input" value="${results.forecast.nonPostedBreakdown.misc}" min="0" step="50">
-      </div>
-      <div class="assumption-row assumption-total">
-        <span class="assumption-label">Total Monthly</span>
-        <span id="totalMonthly">$${results.forecast.nonPostedMonthly.toLocaleString()}</span>
-      </div>
-      <button class="recalculate-btn" id="recalcBtn" onclick="recalculateForecast()">🔄 Recalculate Forecast</button>
-    </div>`;
-
-    // Spike alerts
-    if (results.spikes.hasAnomalies) {
-        html += `
-    <div class="section">
-      <div class="section-title">⚠️ Expense Alerts</div>`;
-
-        results.spikes.spikes.forEach(s => {
-            html += `
-        <div class="spike">
-          <strong>${s.category}</strong>: ${formatCurrency(s.currentAmount)} 
-          <span style="float: right; color: #D32F2F;">+${s.percentChange}% vs YoY</span>
-        </div>`;
-        });
-
-        results.spikes.aboveNormal.forEach(s => {
-            html += `
-        <div class="above-normal">
-          <strong>${s.category}</strong>: ${formatCurrency(s.currentAmount)} 
-          <span style="float: right; color: #FF9800;">+${s.percentChange}% vs YoY</span>
-        </div>`;
-        });
-
-        html += `</div>`;
-    }
-
-    // AI Insights
-    if (results.aiInsights) {
-        html += `
-    <div class="ai-section">
-      <div class="ai-title">🤖 AI Analysis</div>
-      <div>${results.aiInsights}</div>
-    </div>`;
-    }
-
-    html += `
-    <div style="text-align: center; font-size: 11px; color: #999; margin-top: 20px;">
-      Generated by Expense Analysis Agent
-    </div>
-    
-    <script>
-      // Update total as user types
-      function updateTotal() {
-        var groceries = parseFloat(document.getElementById('groceries').value) || 0;
-        var online = parseFloat(document.getElementById('onlinePurchases').value) || 0;
-        var gasoline = parseFloat(document.getElementById('gasoline').value) || 0;
-        var misc = parseFloat(document.getElementById('misc').value) || 0;
-        var total = groceries + online + gasoline + misc;
-        document.getElementById('totalMonthly').textContent = '$' + total.toLocaleString();
-      }
-      
-      // Add listeners to all inputs
-      ['groceries', 'onlinePurchases', 'gasoline', 'misc'].forEach(function(id) {
-        document.getElementById(id).addEventListener('input', updateTotal);
-      });
-      
-      // Recalculate forecast with new assumptions
-      function recalculateForecast() {
-        var btn = document.getElementById('recalcBtn');
-        btn.disabled = true;
-        btn.textContent = '⏳ Recalculating...';
-        
-        var groceries = parseFloat(document.getElementById('groceries').value) || 0;
-        var online = parseFloat(document.getElementById('onlinePurchases').value) || 0;
-        var gasoline = parseFloat(document.getElementById('gasoline').value) || 0;
-        var misc = parseFloat(document.getElementById('misc').value) || 0;
-        
-        google.script.run
-          .withSuccessHandler(function() {
-            // Dialog will be replaced with new content
-          })
-          .withFailureHandler(function(err) {
-            alert('Error: ' + err);
-            btn.disabled = false;
-            btn.textContent = '🔄 Recalculate Forecast';
-          })
-          .recalculateWithAssumptions(groceries, online, gasoline, misc);
-      }
-    </script>`;
+    const html = generateAgentHtml(results, { isReadOnly: false, isStandalone: false });
 
     const htmlOutput = HtmlService.createHtmlOutput(html)
         .setWidth(500)
@@ -622,17 +406,17 @@ function displayAgentResults(results, myNumbers) {
 
 /**
  * Web App entry point - serves the mobile-responsive HTML page.
- * Deploy this script as a web app to access from any browser.
- * 
- * @param {Object} e - Event object from web request
- * @returns {HtmlOutput} - Full HTML page with analysis
+ * Sets to read-only mode for standalone access.
  */
 function doGet(e) {
     try {
         const results = runExpenseAnalysisAgent(true);
-        return HtmlService.createHtmlOutput(generateWebAppHtml(results))
+        const html = generateAgentHtml(results, { isReadOnly: true, isStandalone: true });
+
+        return HtmlService.createHtmlOutput(html)
             .setTitle('Expense Analysis')
-            .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+            .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+            .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
     } catch (error) {
         return HtmlService.createHtmlOutput(`<h1>Error</h1><p>${error.toString()}</p>`);
     }
@@ -640,74 +424,25 @@ function doGet(e) {
 
 
 /**
- * Handles POST requests for recalculation with custom assumptions.
- * 
- * @param {Object} e - Event object with form parameters
- * @returns {HtmlOutput} - Updated HTML page with new calculations
+ * Handles POST requests (only used for spreadsheet-like interactive contexts if needed, 
+ * but currently web app is read-only).
  */
 function doPost(e) {
-    try {
-        const params = e.parameter;
-        const customAssumptions = {
-            groceries: parseFloat(params.groceries) || 0,
-            onlinePurchases: parseFloat(params.onlinePurchases) || 0,
-            gasoline: parseFloat(params.gasoline) || 0,
-            misc: parseFloat(params.misc) || 0
-        };
-
-        const myNumbers = new staticNumbers();
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const now = new Date();
-        const currentMonthIndex = now.getMonth();
-        const currentMonthName = months[currentMonthIndex];
-        const currentYear = now.getFullYear();
-
-        const prevMonthDate = new Date(currentYear, currentMonthIndex - 1, 1);
-        const prevMonthIndex = prevMonthDate.getMonth();
-        const prevMonthYear = prevMonthDate.getFullYear();
-
-        const ss = SpreadsheetApp.getActiveSpreadsheet();
-
-        const comparisonData = getMonthlyComparisonData(
-            ss, currentMonthIndex, currentYear, prevMonthIndex, prevMonthYear, myNumbers, months
-        );
-
-        const forecastData = calculateAnnualForecast(
-            ss, currentMonthIndex, currentYear, myNumbers, months, customAssumptions
-        );
-
-        const spikeAnalysis = detectExpenseSpikes(
-            comparisonData.current, comparisonData.yearAgo, myNumbers
-        );
-
-        const aiAnalysis = generateAgentAnalysis(comparisonData, forecastData, spikeAnalysis);
-
-        const results = {
-            timestamp: now.toISOString(),
-            currentMonth: currentMonthName,
-            currentYear: currentYear,
-            comparison: comparisonData,
-            forecast: forecastData,
-            spikes: spikeAnalysis,
-            aiInsights: aiAnalysis
-        };
-
-        return HtmlService.createHtmlOutput(generateWebAppHtml(results))
-            .setTitle('Expense Analysis')
-            .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-    } catch (error) {
-        return HtmlService.createHtmlOutput(`<h1>Error</h1><p>${error.toString()}</p>`);
-    }
+    // For now, web app is read-only. In the future, this could handle specific web-only actions.
+    return doGet(e);
 }
 
 
 /**
- * Generates mobile-responsive HTML for the web app.
+ * Unified HTML generator for both spreadsheet dialog and web app.
  * 
  * @param {Object} results - Analysis results object
+ * @param {Object} options - { isReadOnly: boolean, isStandalone: boolean }
  * @returns {string} - Complete HTML page
  */
-function generateWebAppHtml(results) {
+function generateAgentHtml(results, options) {
+    const isReadOnly = options.isReadOnly || false;
+    const isStandalone = options.isStandalone || false;
     const formatCurrency = (val) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(val || 0);
 
     let html = `<!DOCTYPE html>
@@ -719,157 +454,107 @@ function generateWebAppHtml(results) {
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: ${isStandalone ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#fff'};
             min-height: 100vh;
-            padding: 16px;
+            padding: ${isStandalone ? '12px' : '0'};
             color: #333;
+            overflow-x: hidden;
         }
-        .container { max-width: 600px; margin: 0 auto; }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto;
+            background: ${isStandalone ? 'transparent' : '#fff'};
+        }
         
         .header {
-            background: rgba(255,255,255,0.95);
-            border-radius: 16px;
-            padding: 24px;
+            background: ${isStandalone ? 'rgba(255,255,255,0.95)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
+            color: ${isStandalone ? '#333' : 'white'};
+            border-radius: ${isStandalone ? '16px' : '0 0 16px 16px'};
+            padding: 20px;
             text-align: center;
             margin-bottom: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .header h1 { font-size: 24px; color: #333; margin-bottom: 4px; }
-        .header .date { color: #667eea; font-weight: 600; font-size: 16px; }
+        .header h1 { font-size: 22px; margin-bottom: 4px; }
+        .header .date { color: ${isStandalone ? '#667eea' : 'rgba(255,255,255,0.9)'}; font-weight: 600; font-size: 15px; }
         
         .card {
             background: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
         }
         .card-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #555;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            border-bottom: 3px solid #667eea;
+            font-size: 14px; font-weight: 700; color: #555;
+            margin-bottom: 12px; padding-bottom: 6px;
+            border-bottom: 2px solid #667eea;
         }
         
         .metric {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid #f9f9f9;
         }
-        .metric:last-of-type { border-bottom: none; }
-        .metric-label { color: #666; font-size: 14px; }
-        .metric-value { font-weight: 700; font-size: 16px; }
-        .metric-value.big { font-size: 24px; color: #667eea; }
+        .metric:last-child { border-bottom: none; }
+        .metric-label { color: #666; font-size: 13px; }
+        .metric-value { font-weight: 700; font-size: 15px; }
+        .metric-value.big { font-size: 20px; color: #667eea; }
         .positive { color: #2E7D32; }
         .negative { color: #D32F2F; }
         
         .spike { 
-            background: #FFEBEE; 
-            border-left: 4px solid #D32F2F; 
-            padding: 12px 16px; 
-            margin: 8px 0; 
-            border-radius: 0 8px 8px 0;
-            display: flex;
-            justify-content: space-between;
+            background: #FFEBEE; border-left: 4px solid #D32F2F; 
+            padding: 10px; margin: 6px 0; border-radius: 0 6px 6px 0;
+            display: flex; justify-content: space-between; font-size: 13px;
         }
         .above-normal { 
-            background: #FFF3E0; 
-            border-left: 4px solid #FF9800; 
-            padding: 12px 16px; 
-            margin: 8px 0; 
-            border-radius: 0 8px 8px 0;
-            display: flex;
-            justify-content: space-between;
+            background: #FFF3E0; border-left: 4px solid #FF9800; 
+            padding: 10px; margin: 6px 0; border-radius: 0 6px 6px 0;
+            display: flex; justify-content: space-between; font-size: 13px;
         }
         
-        .ai-card {
-            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
+        .ai-section {
+            background: #E8F5E9; border-radius: 12px;
+            padding: 16px; margin-bottom: 12px; border: 1px solid #C8E6C9;
         }
-        .ai-title { font-size: 16px; font-weight: 700; color: #2E7D32; margin-bottom: 12px; }
-        .ai-card ul { padding-left: 20px; }
-        .ai-card li { margin-bottom: 10px; line-height: 1.5; font-size: 14px; }
+        .ai-title { font-size: 14px; font-weight: 700; color: #2E7D32; margin-bottom: 10px; }
+        .ai-section ul { padding-left: 18px; }
+        .ai-section li { margin-bottom: 8px; line-height: 1.4; font-size: 13px; }
         
-        .assumptions-card {
-            background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            border: 2px solid #FFB74D;
+        .assumptions-section {
+            background: #FFF8E1; border-radius: 12px;
+            padding: 16px; margin-bottom: 12px; border: 1px solid #FFE082;
         }
-        .assumptions-title { font-size: 16px; font-weight: 700; color: #F57C00; margin-bottom: 16px; }
+        .assumptions-title { font-size: 14px; font-weight: 700; color: #F57C00; margin-bottom: 12px; }
         
-        .input-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-        }
-        .input-label { font-size: 14px; color: #666; }
-        .input-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .input-wrapper span { color: #666; font-size: 16px; }
-        input[type="number"] {
-            width: 100px;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            text-align: right;
-            -webkit-appearance: none;
-        }
-        input[type="number"]:focus {
-            border-color: #667eea;
-            outline: none;
-        }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
+        .item-label { color: #666; }
+        .item-value { font-weight: 600; }
         
         .total-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 0;
-            margin-top: 8px;
-            border-top: 2px solid #FFB74D;
-            font-weight: 700;
-            color: #F57C00;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; margin-top: 8px; border-top: 1px solid #FFB74D;
+            font-weight: 700; color: #F57C00; font-size: 14px;
         }
         
-        .submit-btn {
-            width: 100%;
-            padding: 16px;
+        /* Interactive styles */
+        input[type="number"] {
+            width: 80px; padding: 8px; border: 1px solid #ddd;
+            border-radius: 6px; font-size: 14px; text-align: right;
+        }
+        .recalculate-btn {
+            width: 100%; padding: 12px; margin-top: 12px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 12px;
-            -webkit-tap-highlight-color: transparent;
+            color: white; border: none; border-radius: 8px;
+            font-size: 14px; font-weight: 700; cursor: pointer;
         }
-        .submit-btn:active { opacity: 0.9; transform: scale(0.98); }
-        
+        .recalculate-btn:disabled { opacity: 0.6; }
+
         .footer {
-            text-align: center;
-            color: rgba(255,255,255,0.7);
-            font-size: 12px;
-            padding: 16px;
-        }
-        
-        @media (max-width: 400px) {
-            body { padding: 12px; }
-            .card, .ai-card, .assumptions-card { padding: 16px; }
-            .header h1 { font-size: 20px; }
+            text-align: center; color: ${isStandalone ? 'rgba(255,255,255,0.7)' : '#999'};
+            font-size: 11px; padding: 10px;
         }
     </style>
 </head>
@@ -890,22 +575,20 @@ function generateWebAppHtml(results) {
     if (results.comparison.vsPrevMonth) {
         const pct = parseFloat(results.comparison.vsPrevMonth.percentChange);
         const colorClass = pct > 0 ? 'negative' : 'positive';
-        const sign = pct > 0 ? '+' : '';
         html += `
             <div class="metric">
-                <span class="metric-label">vs ${results.comparison.previousMonthName} ${results.comparison.previousMonthYear}</span>
-                <span class="metric-value ${colorClass}">${sign}${results.comparison.vsPrevMonth.percentChange}%</span>
+                <span class="metric-label">vs ${results.comparison.previousMonthName}</span>
+                <span class="metric-value ${colorClass}">${pct > 0 ? '+' : ''}${pct}%</span>
             </div>`;
     }
 
     if (results.comparison.vsYearAgo) {
         const pct = parseFloat(results.comparison.vsYearAgo.percentChange);
         const colorClass = pct > 0 ? 'negative' : 'positive';
-        const sign = pct > 0 ? '+' : '';
         html += `
             <div class="metric">
-                <span class="metric-label">vs ${results.comparison.currentMonthName} ${results.comparison.yearAgoYear} (YoY)</span>
-                <span class="metric-value ${colorClass}">${sign}${results.comparison.vsYearAgo.percentChange}%</span>
+                <span class="metric-label">vs ${results.currentMonth} ${results.comparison.yearAgoYear} (YoY)</span>
+                <span class="metric-value ${colorClass}">${pct > 0 ? '+' : ''}${pct}%</span>
             </div>`;
     }
 
@@ -915,7 +598,7 @@ function generateWebAppHtml(results) {
         <div class="card">
             <div class="card-title">Annual Forecast</div>
             <div class="metric">
-                <span class="metric-label">YTD Posted (${results.forecast.monthsCompleted} months)</span>
+                <span class="metric-label">YTD Posted (${results.forecast.monthsCompleted} mo)</span>
                 <span class="metric-value">${formatCurrency(results.forecast.ytdPosted)}</span>
             </div>
             <div class="metric">
@@ -926,118 +609,102 @@ function generateWebAppHtml(results) {
     if (results.forecast.vsLastYear.percentChange) {
         const pct = parseFloat(results.forecast.vsLastYear.percentChange);
         const colorClass = pct > 0 ? 'negative' : 'positive';
-        const sign = pct > 0 ? '+' : '';
         html += `
             <div class="metric">
                 <span class="metric-label">vs Last Year (${formatCurrency(results.forecast.previousYearTotal)})</span>
-                <span class="metric-value ${colorClass}">${sign}${results.forecast.vsLastYear.percentChange}%</span>
+                <span class="metric-value ${colorClass}">${pct > 0 ? '+' : ''}${pct}%</span>
             </div>`;
     }
 
     html += `
         </div>`;
 
-    // Spike alerts
     if (results.spikes.hasAnomalies) {
         html += `
         <div class="card">
             <div class="card-title">⚠️ Expense Alerts</div>`;
-
         results.spikes.spikes.forEach(s => {
-            html += `
-            <div class="spike">
-                <strong>${s.category}</strong>
-                <span style="color: #D32F2F;">+${s.percentChange}%</span>
-            </div>`;
+            html += `<div class="spike"><strong>${s.category}</strong><span class="negative">+${s.percentChange}%</span></div>`;
         });
-
         results.spikes.aboveNormal.forEach(s => {
-            html += `
-            <div class="above-normal">
-                <strong>${s.category}</strong>
-                <span style="color: #FF9800;">+${s.percentChange}%</span>
-            </div>`;
+            html += `<div class="above-normal"><strong>${s.category}</strong><span class="negative">+${s.percentChange}%</span></div>`;
         });
-
         html += `</div>`;
     }
 
-    // AI Insights
     if (results.aiInsights) {
-        html += `
-        <div class="ai-card">
-            <div class="ai-title">🤖 AI Analysis</div>
-            <div>${results.aiInsights}</div>
-        </div>`;
+        html += `<div class="ai-section"><div class="ai-title">🤖 AI Analysis</div><div>${results.aiInsights}</div></div>`;
     }
 
-    // Assumptions form
+    html += `<div class="assumptions-section">
+        <div class="assumptions-title">📝 Forecast Assumptions (Monthly)</div>`;
+
+    const categories = [
+        { id: 'groceries', label: 'Groceries', val: results.forecast.nonPostedBreakdown.groceries },
+        { id: 'onlinePurchases', label: 'Online Purchases', val: results.forecast.nonPostedBreakdown.onlinePurchases },
+        { id: 'gasoline', label: 'Gasoline', val: results.forecast.nonPostedBreakdown.gasoline },
+        { id: 'misc', label: 'Miscellaneous', val: results.forecast.nonPostedBreakdown.misc }
+    ];
+
+    categories.forEach(cat => {
+        html += `<div class="item-row">
+            <span class="item-label">${cat.label}</span>
+            <span class="item-value">
+                ${isReadOnly
+                ? formatCurrency(cat.val)
+                : `$ <input type="number" id="${cat.id}" value="${cat.val}" min="0" step="50" oninput="updateTotal()">`}
+            </span>
+        </div>`;
+    });
+
     html += `
-        <form method="POST" action="">
-            <div class="assumptions-card">
-                <div class="assumptions-title">📝 Forecast Assumptions (Monthly)</div>
-                
-                <div class="input-row">
-                    <span class="input-label">Groceries</span>
-                    <div class="input-wrapper">
-                        <span>$</span>
-                        <input type="number" name="groceries" id="groceries" value="${results.forecast.nonPostedBreakdown.groceries}" min="0" step="50">
-                    </div>
-                </div>
-                
-                <div class="input-row">
-                    <span class="input-label">Online Purchases</span>
-                    <div class="input-wrapper">
-                        <span>$</span>
-                        <input type="number" name="onlinePurchases" id="onlinePurchases" value="${results.forecast.nonPostedBreakdown.onlinePurchases}" min="0" step="50">
-                    </div>
-                </div>
-                
-                <div class="input-row">
-                    <span class="input-label">Gasoline</span>
-                    <div class="input-wrapper">
-                        <span>$</span>
-                        <input type="number" name="gasoline" id="gasoline" value="${results.forecast.nonPostedBreakdown.gasoline}" min="0" step="50">
-                    </div>
-                </div>
-                
-                <div class="input-row">
-                    <span class="input-label">Miscellaneous</span>
-                    <div class="input-wrapper">
-                        <span>$</span>
-                        <input type="number" name="misc" id="misc" value="${results.forecast.nonPostedBreakdown.misc}" min="0" step="50">
-                    </div>
-                </div>
-                
-                <div class="total-row">
-                    <span>Total Monthly</span>
-                    <span id="totalMonthly">$${results.forecast.nonPostedMonthly.toLocaleString()}</span>
-                </div>
-                
-                <button type="submit" class="submit-btn">🔄 Recalculate Forecast</button>
-            </div>
-        </form>
-        
-        <div class="footer">
-            Generated by Expense Analysis Agent<br>
-            ${new Date().toLocaleDateString('en-CA')}
-        </div>
-    </div>
-    
+        <div class="total-row">
+            <span>Total Monthly Non-Posted</span>
+            <span id="totalMonthly">${formatCurrency(results.forecast.nonPostedMonthly)}</span>
+        </div>`;
+
+    if (!isReadOnly) {
+        html += `<button class="recalculate-btn" id="recalcBtn" onclick="recalculateForecast()">🔄 Recalculate Forecast</button>`;
+    }
+
+    html += `</div>
+        <div class="footer">Generated by Expense Analysis Agent</div>
+    </div>`;
+
+    if (!isReadOnly) {
+        html += `
     <script>
         function updateTotal() {
             var g = parseFloat(document.getElementById('groceries').value) || 0;
             var o = parseFloat(document.getElementById('onlinePurchases').value) || 0;
             var ga = parseFloat(document.getElementById('gasoline').value) || 0;
             var m = parseFloat(document.getElementById('misc').value) || 0;
-            document.getElementById('totalMonthly').textContent = '$' + (g + o + ga + m).toLocaleString();
+            var total = g + o + ga + m;
+            document.getElementById('totalMonthly').textContent = '$' + total.toLocaleString();
         }
-        ['groceries', 'onlinePurchases', 'gasoline', 'misc'].forEach(function(id) {
-            document.getElementById(id).addEventListener('input', updateTotal);
-        });
-    </script>
-</body>
-</html>`;
+        
+        function recalculateForecast() {
+            var btn = document.getElementById('recalcBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Recalculating...';
+            
+            var groceries = parseFloat(document.getElementById('groceries').value) || 0;
+            var online = parseFloat(document.getElementById('onlinePurchases').value) || 0;
+            var gasoline = parseFloat(document.getElementById('gasoline').value) || 0;
+            var misc = parseFloat(document.getElementById('misc').value) || 0;
+            
+            google.script.run
+                .withSuccessHandler(function() {})
+                .withFailureHandler(function(err) {
+                    alert('Error: ' + err);
+                    btn.disabled = false;
+                    btn.textContent = '🔄 Recalculate Forecast';
+                })
+                .recalculateWithAssumptions(groceries, online, gasoline, misc);
+        }
+    </script>`;
+    }
 
+    html += `</body></html>`;
     return html;
 }
