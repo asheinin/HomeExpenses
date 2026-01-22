@@ -94,6 +94,7 @@ function staticNumbers() { // constructor function
   this.agentGroceriesMonthly = 800;
   this.agentOnlinePurchasesMonthly = 800;
   this.agentGasolineMonthly = 400;
+  this.agentMiscMonthly = 1000;
 
   this.privilegedMethod = function () {
     alert();

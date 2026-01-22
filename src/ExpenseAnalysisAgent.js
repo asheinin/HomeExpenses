@@ -168,7 +168,8 @@ function calculateAnnualForecast(ss, currentMonthIndex, currentYear, myNumbers, 
     const groceriesMonthly = myNumbers.agentGroceriesMonthly || 800;
     const onlinePurchasesMonthly = myNumbers.agentOnlinePurchasesMonthly || 800;
     const gasolineMonthly = myNumbers.agentGasolineMonthly || 400;
-    const nonPostedMonthly = groceriesMonthly + onlinePurchasesMonthly + gasolineMonthly;
+    const miscMonthly = myNumbers.agentMiscMonthly || 1000;
+    const nonPostedMonthly = groceriesMonthly + onlinePurchasesMonthly + gasolineMonthly + miscMonthly;
 
     // Remaining months in the year
     const remainingMonths = 11 - currentMonthIndex; // 0-indexed, so December (11) means 0 remaining
@@ -195,7 +196,8 @@ function calculateAnnualForecast(ss, currentMonthIndex, currentYear, myNumbers, 
         nonPostedBreakdown: {
             groceries: groceriesMonthly,
             onlinePurchases: onlinePurchasesMonthly,
-            gasoline: gasolineMonthly
+            gasoline: gasolineMonthly,
+            misc: miscMonthly
         },
         projectedRemaining: projectedRemaining,
         annualForecast: annualForecast,
@@ -274,7 +276,7 @@ function generateAgentAnalysis(comparisonData, forecastData, spikeAnalysis) {
     const formatCurrency = (val) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(val || 0);
 
     let prompt = `You are a household expense analysis agent. Analyze this data and provide 3-4 actionable insights.
-Be concise, helpful, and use bold text for key numbers. Format as HTML list (<ul><li>...</li></ul>).
+Be concise, helpful, and use bold text for key numbers. Format as HTML list (<ul><li>...</li></ul>).Also, please advice of assumptions made in html (projections only, list assumptions for gasoline, misc, groceries, online purchases)
 
 CURRENT MONTH: ${comparisonData.currentMonthName}
 - Total Spend: ${formatCurrency(comparisonData.current?.totalSpend)}
