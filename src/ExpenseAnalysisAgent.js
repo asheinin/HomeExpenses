@@ -547,9 +547,9 @@ function generateAgentHtml(results, options) {
             background: #E8F5E9; border-radius: 12px;
             padding: 14px; margin-bottom: 10px; border: 1px solid #C8E6C9;
         }
-        .ai-title { font-size: 13px; font-weight: 700; color: #2E7D32; margin-bottom: 8px; }
+        .ai-title { font-size: 15px; font-weight: 700; color: #2E7D32; margin-bottom: 10px; }
         .ai-section ul { padding-left: 16px; }
-        .ai-section li { margin-bottom: 6px; line-height: 1.4; font-size: 12px; }
+        .ai-section li { margin-bottom: 8px; line-height: 1.5; font-size: 14px; }
         
         /* Modal Overlay */
         .modal-overlay {
