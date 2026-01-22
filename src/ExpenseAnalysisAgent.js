@@ -463,105 +463,149 @@ function generateAgentHtml(results, options) {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: ${isEmbedded ? 'transparent' : (isStandalone ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#fff')};
             min-height: 100vh;
-            padding: ${isEmbedded ? '0' : (isStandalone ? '12px' : '0')};
+            padding: ${isEmbedded ? '0' : (isStandalone ? '10px' : '0')};
             color: #333;
             overflow-x: hidden;
         }
         .container { 
             max-width: 600px; 
             margin: 0 auto;
+            position: relative;
             background: ${isStandalone || isEmbedded ? 'transparent' : '#fff'};
         }
         
         .header {
             background: ${isStandalone || isEmbedded ? 'rgba(255,255,255,0.95)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
             color: ${isStandalone || isEmbedded ? '#333' : 'white'};
-            border-radius: ${isStandalone || isEmbedded ? '16px' : '0 0 16px 16px'};
-            padding: 20px;
+            border-radius: ${isStandalone || isEmbedded ? '12px' : '0 0 12px 12px'};
+            padding: 16px;
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
             ${isEmbedded ? 'margin-top: 5px;' : ''}
         }
-        .header h1 { font-size: 20px; margin-bottom: 4px; }
-        .header .date { color: ${isStandalone || isEmbedded ? '#667eea' : 'rgba(255,255,255,0.9)'}; font-weight: 600; font-size: 14px; }
+        .header h1 { font-size: 18px; margin-bottom: 2px; }
+        .header .date { color: ${isStandalone || isEmbedded ? '#667eea' : 'rgba(255,255,255,0.9)'}; font-weight: 600; font-size: 13px; }
         
+        .menu-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            color: ${isStandalone || isEmbedded ? '#667eea' : 'white'};
+            -webkit-tap-highlight-color: transparent;
+            z-index: 10;
+        }
+        .menu-btn:active { background: rgba(102, 126, 234, 0.1); }
+
         .card {
             background: white;
             border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             border: 1px solid #eee;
         }
         .card-title {
-            font-size: 14px; font-weight: 700; color: #555;
-            margin-bottom: 12px; padding-bottom: 6px;
+            font-size: 13px; font-weight: 700; color: #555;
+            margin-bottom: 10px; padding-bottom: 5px;
             border-bottom: 2px solid #667eea;
         }
         
         .metric {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 0; border-bottom: 1px solid #f9f9f9;
+            padding: 8px 0; border-bottom: 1px solid #f9f9f9;
         }
         .metric:last-child { border-bottom: none; }
-        .metric-label { color: #666; font-size: 13px; }
-        .metric-value { font-weight: 700; font-size: 15px; }
-        .metric-value.big { font-size: 20px; color: #667eea; }
+        .metric-label { color: #666; font-size: 12px; }
+        .metric-value { font-weight: 700; font-size: 14px; }
+        .metric-value.big { font-size: 18px; color: #667eea; }
         .positive { color: #2E7D32; }
         .negative { color: #D32F2F; }
         
         .spike { 
             background: #FFEBEE; border-left: 4px solid #D32F2F; 
-            padding: 10px; margin: 6px 0; border-radius: 0 6px 6px 0;
-            display: flex; justify-content: space-between; font-size: 13px;
+            padding: 8px; margin: 4px 0; border-radius: 0 6px 6px 0;
+            display: flex; justify-content: space-between; font-size: 12px;
         }
         .above-normal { 
             background: #FFF3E0; border-left: 4px solid #FF9800; 
-            padding: 10px; margin: 6px 0; border-radius: 0 6px 6px 0;
-            display: flex; justify-content: space-between; font-size: 13px;
+            padding: 8px; margin: 4px 0; border-radius: 0 6px 6px 0;
+            display: flex; justify-content: space-between; font-size: 12px;
         }
         
         .ai-section {
             background: #E8F5E9; border-radius: 12px;
-            padding: 16px; margin-bottom: 12px; border: 1px solid #C8E6C9;
+            padding: 14px; margin-bottom: 10px; border: 1px solid #C8E6C9;
         }
-        .ai-title { font-size: 14px; font-weight: 700; color: #2E7D32; margin-bottom: 10px; }
-        .ai-section ul { padding-left: 18px; }
-        .ai-section li { margin-bottom: 8px; line-height: 1.4; font-size: 13px; }
+        .ai-title { font-size: 13px; font-weight: 700; color: #2E7D32; margin-bottom: 8px; }
+        .ai-section ul { padding-left: 16px; }
+        .ai-section li { margin-bottom: 6px; line-height: 1.4; font-size: 12px; }
         
-        .assumptions-section {
-            background: #FFF8E1; border-radius: 12px;
-            padding: 16px; margin-bottom: 12px; border: 1px solid #FFE082;
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
         }
-        .assumptions-title { font-size: 14px; font-weight: 700; color: #F57C00; margin-bottom: 12px; }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
         
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
+        .assumptions-title { font-size: 15px; font-weight: 700; color: #F57C00; margin-bottom: 15px; border-bottom: 2px solid #FFE082; padding-bottom: 5px; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 13px; border-bottom: 1px solid #f9f9f9; }
         .item-label { color: #666; }
         .item-value { font-weight: 600; }
         
         .total-row {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 0; margin-top: 8px; border-top: 1px solid #FFB74D;
-            font-weight: 700; color: #F57C00; font-size: 14px;
+            padding: 12px 0; margin-top: 10px; border-top: 2px solid #FFB74D;
+            font-weight: 700; color: #F57C00; font-size: 15px;
         }
         
-        /* Interactive styles */
         input[type="number"] {
-            width: 80px; padding: 8px; border: 1px solid #ddd;
+            width: 90px; padding: 8px; border: 1px solid #ddd;
             border-radius: 6px; font-size: 14px; text-align: right;
         }
         .recalculate-btn {
-            width: 100%; padding: 12px; margin-top: 12px;
+            width: 100%; padding: 14px; margin-top: 15px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; border: none; border-radius: 8px;
+            color: white; border: none; border-radius: 10px;
             font-size: 14px; font-weight: 700; cursor: pointer;
         }
         .recalculate-btn:disabled { opacity: 0.6; }
 
         .footer {
-            text-align: center; color: ${isStandalone || isEmbedded ? 'rgba(0,0,0,0.5)' : '#999'};
-            font-size: 11px; padding: 10px;
+            text-align: center; color: ${isStandalone || isEmbedded ? 'rgba(0,0,0,0.4)' : '#aaa'};
+            font-size: 10px; padding: 10px;
         }
     </style>
 </head>
@@ -570,6 +614,7 @@ function generateAgentHtml(results, options) {
         <div class="header">
             <h1>📊 Expense Analysis</h1>
             <div class="date">${results.currentMonth} ${results.currentYear}</div>
+            <div class="menu-btn" onclick="toggleAssumptions(true)" title="Forecast Assumptions">⋮</div>
         </div>
         
         <div class="card">
@@ -643,8 +688,12 @@ function generateAgentHtml(results, options) {
         html += `<div class="ai-section"><div class="ai-title">🤖 AI Analysis</div><div>${results.aiInsights}</div></div>`;
     }
 
-    html += `<div class="assumptions-section">
-        <div class="assumptions-title">📝 Forecast Assumptions (Monthly)</div>`;
+    /* Modal for Assumptions */
+    html += `
+    <div class="modal-overlay" id="modalOverlay" onclick="if(event.target==this) toggleAssumptions(false)">
+        <div class="modal-content">
+            <div class="modal-close" onclick="toggleAssumptions(false)">×</div>
+            <div class="assumptions-title">📝 Forecast Assumptions (Monthly)</div>`;
 
     const categories = [
         { id: 'groceries', label: 'Groceries', val: results.forecast.nonPostedBreakdown.groceries },
@@ -665,22 +714,30 @@ function generateAgentHtml(results, options) {
     });
 
     html += `
-        <div class="total-row">
-            <span>Total Monthly Non-Posted</span>
-            <span id="totalMonthly">${formatCurrency(results.forecast.nonPostedMonthly)}</span>
-        </div>`;
+            <div class="total-row">
+                <span>Total Monthly Non-Posted</span>
+                <span id="totalMonthly">${formatCurrency(results.forecast.nonPostedMonthly)}</span>
+            </div>`;
 
     if (!isReadOnly) {
         html += `<button class="recalculate-btn" id="recalcBtn" onclick="recalculateForecast()">🔄 Recalculate Forecast</button>`;
     }
 
-    html += `</div>
-        <div class="footer">Generated by Expense Analysis Agent</div>
+    html += `
+        </div>
+    </div>
+    
+    <div class="footer">Generated by Expense Analysis Agent</div>
     </div>`;
 
-    if (!isReadOnly) {
-        html += `
+    html += `
     <script>
+        function toggleAssumptions(show) {
+            document.getElementById('modalOverlay').style.display = show ? 'flex' : 'none';
+            if (show) document.body.style.overflow = 'hidden';
+            else document.body.style.overflow = 'auto';
+        }
+
         function updateTotal() {
             var g = parseFloat(document.getElementById('groceries').value) || 0;
             var o = parseFloat(document.getElementById('onlinePurchases').value) || 0;
@@ -692,6 +749,7 @@ function generateAgentHtml(results, options) {
         
         function recalculateForecast() {
             var btn = document.getElementById('recalcBtn');
+            var originalText = btn.textContent;
             btn.disabled = true;
             btn.textContent = '⏳ Recalculating...';
             
@@ -701,18 +759,18 @@ function generateAgentHtml(results, options) {
             var misc = parseFloat(document.getElementById('misc').value) || 0;
             
             google.script.run
-                .withSuccessHandler(function() {})
+                .withSuccessHandler(function() {
+                    toggleAssumptions(false);
+                })
                 .withFailureHandler(function(err) {
                     alert('Error: ' + err);
                     btn.disabled = false;
-                    btn.textContent = '🔄 Recalculate Forecast';
+                    btn.textContent = originalText;
                 })
                 .recalculateWithAssumptions(groceries, online, gasoline, misc);
         }
-    </script>`;
-    }
-
-    html += `</body></html>`;
+    </script>
+    </body></html>`;
     return html;
 }
 
