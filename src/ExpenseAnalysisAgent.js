@@ -76,6 +76,67 @@ function runExpenseAnalysisAgent(returnData) {
 
 
 /**
+ * Recalculates the expense analysis with custom assumption values.
+ * Called from the dialog when user edits assumptions and clicks Recalculate.
+ * 
+ * @param {number} groceries - Monthly groceries estimate
+ * @param {number} onlinePurchases - Monthly online purchases estimate
+ * @param {number} gasoline - Monthly gasoline estimate
+ * @param {number} misc - Monthly miscellaneous estimate
+ */
+function recalculateWithAssumptions(groceries, onlinePurchases, gasoline, misc) {
+    const myNumbers = new staticNumbers();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const now = new Date();
+    const currentMonthIndex = now.getMonth();
+    const currentMonthName = months[currentMonthIndex];
+    const currentYear = now.getFullYear();
+
+    const prevMonthDate = new Date(currentYear, currentMonthIndex - 1, 1);
+    const prevMonthIndex = prevMonthDate.getMonth();
+    const prevMonthYear = prevMonthDate.getFullYear();
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    // Custom assumptions from user input
+    const customAssumptions = {
+        groceries: parseFloat(groceries) || 0,
+        onlinePurchases: parseFloat(onlinePurchases) || 0,
+        gasoline: parseFloat(gasoline) || 0,
+        misc: parseFloat(misc) || 0
+    };
+
+    const comparisonData = getMonthlyComparisonData(
+        ss, currentMonthIndex, currentYear, prevMonthIndex, prevMonthYear, myNumbers, months
+    );
+
+    // Pass custom assumptions to forecast calculation
+    const forecastData = calculateAnnualForecast(
+        ss, currentMonthIndex, currentYear, myNumbers, months, customAssumptions
+    );
+
+    const spikeAnalysis = detectExpenseSpikes(
+        comparisonData.current, comparisonData.yearAgo, myNumbers
+    );
+
+    const aiAnalysis = generateAgentAnalysis(comparisonData, forecastData, spikeAnalysis);
+
+    const results = {
+        timestamp: now.toISOString(),
+        currentMonth: currentMonthName,
+        currentYear: currentYear,
+        comparison: comparisonData,
+        forecast: forecastData,
+        spikes: spikeAnalysis,
+        aiInsights: aiAnalysis
+    };
+
+    displayAgentResults(results, myNumbers);
+}
+
+
+/**
  * Gathers monthly comparison data: current, previous month, and YoY.
  */
 function getMonthlyComparisonData(ss, currentMonthIndex, currentYear, prevMonthIndex, prevMonthYear, myNumbers, months) {
@@ -132,8 +193,16 @@ function getMonthlyComparisonData(ss, currentMonthIndex, currentYear, prevMonthI
 /**
  * Calculates annual expense forecast.
  * Uses posted expenses YTD + YoY trends + non-posted monthly projections.
+ * 
+ * @param {Spreadsheet} ss - Active spreadsheet
+ * @param {number} currentMonthIndex - Current month (0-11)
+ * @param {number} currentYear - Current year
+ * @param {Object} myNumbers - Static numbers configuration
+ * @param {Array} months - Month names array
+ * @param {Object} customAssumptions - Optional custom assumption values
+ * @returns {Object} Forecast data
  */
-function calculateAnnualForecast(ss, currentMonthIndex, currentYear, myNumbers, months) {
+function calculateAnnualForecast(ss, currentMonthIndex, currentYear, myNumbers, months, customAssumptions) {
     // Get YTD posted expenses from Dashboard
     const dashboard = ss.getSheets()[0];
     let ytdPosted = 0;
@@ -164,11 +233,19 @@ function calculateAnnualForecast(ss, currentMonthIndex, currentYear, myNumbers, 
         prevYearMonthlyAvg = prevYearTotal / 12;
     }
 
-    // Non-posted monthly projections (configurable in staticNumbers)
-    const groceriesMonthly = myNumbers.agentGroceriesMonthly || 800;
-    const onlinePurchasesMonthly = myNumbers.agentOnlinePurchasesMonthly || 800;
-    const gasolineMonthly = myNumbers.agentGasolineMonthly || 400;
-    const miscMonthly = myNumbers.agentMiscMonthly || 1000;
+    // Non-posted monthly projections - use custom values if provided, else defaults
+    const groceriesMonthly = (customAssumptions && customAssumptions.groceries !== undefined)
+        ? customAssumptions.groceries
+        : (myNumbers.agentGroceriesMonthly || 800);
+    const onlinePurchasesMonthly = (customAssumptions && customAssumptions.onlinePurchases !== undefined)
+        ? customAssumptions.onlinePurchases
+        : (myNumbers.agentOnlinePurchasesMonthly || 800);
+    const gasolineMonthly = (customAssumptions && customAssumptions.gasoline !== undefined)
+        ? customAssumptions.gasoline
+        : (myNumbers.agentGasolineMonthly || 400);
+    const miscMonthly = (customAssumptions && customAssumptions.misc !== undefined)
+        ? customAssumptions.misc
+        : (myNumbers.agentMiscMonthly || 1000);
     const nonPostedMonthly = groceriesMonthly + onlinePurchasesMonthly + gasolineMonthly + miscMonthly;
 
     // Remaining months in the year
@@ -339,6 +416,30 @@ function displayAgentResults(results, myNumbers) {
       .ai-title { font-size: 14px; font-weight: bold; color: #2E7D32; margin-bottom: 10px; }
       ul { margin: 0; padding-left: 20px; }
       li { margin-bottom: 8px; line-height: 1.5; }
+      
+      /* Editable assumptions styles */
+      .assumptions-section { background: #FFF8E1; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid #FFE082; }
+      .assumptions-title { font-size: 14px; font-weight: bold; color: #F57C00; margin-bottom: 10px; border-bottom: 2px solid #FFB74D; padding-bottom: 5px; }
+      .assumption-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
+      .assumption-label { color: #666; font-size: 13px; flex: 1; }
+      .assumption-input { width: 100px; padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; text-align: right; }
+      .assumption-input:focus { border-color: #667eea; outline: none; box-shadow: 0 0 3px rgba(102, 126, 234, 0.3); }
+      .recalculate-btn { 
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+        color: white; 
+        border: none; 
+        padding: 10px 20px; 
+        border-radius: 6px; 
+        cursor: pointer; 
+        font-size: 13px; 
+        font-weight: bold;
+        width: 100%;
+        margin-top: 10px;
+        transition: opacity 0.2s;
+      }
+      .recalculate-btn:hover { opacity: 0.9; }
+      .recalculate-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+      .assumption-total { font-weight: bold; color: #F57C00; padding-top: 8px; border-top: 1px solid #FFE082; margin-top: 8px; }
     </style>
 
     <div class="header">
@@ -405,9 +506,31 @@ function displayAgentResults(results, myNumbers) {
         <span class="metric-label">Monthly Non-Posted Estimate</span>
         <span class="metric-value neutral">${formatCurrency(results.forecast.nonPostedMonthly)}</span>
       </div>
-      <div class="metric" style="font-size: 11px; color: #888;">
-        <span class="metric-label">Groceries: ${formatCurrency(results.forecast.nonPostedBreakdown.groceries)} | Online: ${formatCurrency(results.forecast.nonPostedBreakdown.onlinePurchases)} | Gas: ${formatCurrency(results.forecast.nonPostedBreakdown.gasoline)}</span>
+    </div>
+    
+    <div class="assumptions-section">
+      <div class="assumptions-title">📝 Forecast Assumptions (Monthly)</div>
+      <div class="assumption-row">
+        <span class="assumption-label">Groceries</span>
+        <span>$</span><input type="number" id="groceries" class="assumption-input" value="${results.forecast.nonPostedBreakdown.groceries}" min="0" step="50">
       </div>
+      <div class="assumption-row">
+        <span class="assumption-label">Online Purchases</span>
+        <span>$</span><input type="number" id="onlinePurchases" class="assumption-input" value="${results.forecast.nonPostedBreakdown.onlinePurchases}" min="0" step="50">
+      </div>
+      <div class="assumption-row">
+        <span class="assumption-label">Gasoline</span>
+        <span>$</span><input type="number" id="gasoline" class="assumption-input" value="${results.forecast.nonPostedBreakdown.gasoline}" min="0" step="50">
+      </div>
+      <div class="assumption-row">
+        <span class="assumption-label">Miscellaneous</span>
+        <span>$</span><input type="number" id="misc" class="assumption-input" value="${results.forecast.nonPostedBreakdown.misc}" min="0" step="50">
+      </div>
+      <div class="assumption-row assumption-total">
+        <span class="assumption-label">Total Monthly</span>
+        <span id="totalMonthly">$${results.forecast.nonPostedMonthly.toLocaleString()}</span>
+      </div>
+      <button class="recalculate-btn" id="recalcBtn" onclick="recalculateForecast()">🔄 Recalculate Forecast</button>
     </div>`;
 
     // Spike alerts
@@ -447,11 +570,51 @@ function displayAgentResults(results, myNumbers) {
     html += `
     <div style="text-align: center; font-size: 11px; color: #999; margin-top: 20px;">
       Generated by Expense Analysis Agent
-    </div>`;
+    </div>
+    
+    <script>
+      // Update total as user types
+      function updateTotal() {
+        var groceries = parseFloat(document.getElementById('groceries').value) || 0;
+        var online = parseFloat(document.getElementById('onlinePurchases').value) || 0;
+        var gasoline = parseFloat(document.getElementById('gasoline').value) || 0;
+        var misc = parseFloat(document.getElementById('misc').value) || 0;
+        var total = groceries + online + gasoline + misc;
+        document.getElementById('totalMonthly').textContent = '$' + total.toLocaleString();
+      }
+      
+      // Add listeners to all inputs
+      ['groceries', 'onlinePurchases', 'gasoline', 'misc'].forEach(function(id) {
+        document.getElementById(id).addEventListener('input', updateTotal);
+      });
+      
+      // Recalculate forecast with new assumptions
+      function recalculateForecast() {
+        var btn = document.getElementById('recalcBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Recalculating...';
+        
+        var groceries = parseFloat(document.getElementById('groceries').value) || 0;
+        var online = parseFloat(document.getElementById('onlinePurchases').value) || 0;
+        var gasoline = parseFloat(document.getElementById('gasoline').value) || 0;
+        var misc = parseFloat(document.getElementById('misc').value) || 0;
+        
+        google.script.run
+          .withSuccessHandler(function() {
+            // Dialog will be replaced with new content
+          })
+          .withFailureHandler(function(err) {
+            alert('Error: ' + err);
+            btn.disabled = false;
+            btn.textContent = '🔄 Recalculate Forecast';
+          })
+          .recalculateWithAssumptions(groceries, online, gasoline, misc);
+      }
+    </script>`;
 
     const htmlOutput = HtmlService.createHtmlOutput(html)
-        .setWidth(480)
-        .setHeight(650);
+        .setWidth(500)
+        .setHeight(780);
 
     SpreadsheetApp.getUi().showModalDialog(htmlOutput, 'Expense Analysis Agent');
 }
