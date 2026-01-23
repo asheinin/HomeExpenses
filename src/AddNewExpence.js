@@ -49,7 +49,7 @@ function deleteExpenseAI(mode) {
   var template = HtmlService.createTemplateFromFile('ui/DeleteExpenseForm');
   template.mode = mode;
   template.expenseItems = expenseItems;
-  var html = template.evaluate().setWidth(450).setHeight(280);
+  var html = template.evaluate().setWidth(450).setHeight(360);
   SpreadsheetApp.getUi().showModalDialog(html, 'Delete Expense');
 }
 
