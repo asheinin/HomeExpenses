@@ -324,7 +324,12 @@ function validateType(row, col) {
 
     var range = sheet.getRange(row, myNumbers.expenseTypeColumn);
     console.log(myNumbers.expenseTypeColumn + " " + col);
-    var uniqueSummaryTypeValues = Array.from(new Set(summarySheet.getRange(myNumbers.expenseFirstRow, myNumbers.expenseTypeColumn, summarySheet.getLastRow(), myNumbers.expenseTypeColumn).getValues().flat()));
+    var summaryValues = summarySheet.getRange(myNumbers.expenseFirstRow, myNumbers.expenseTypeColumn, summarySheet.getLastRow() - myNumbers.expenseFirstRow + 1, 1).getValues().flat();
+    var firstEmptyIndex = summaryValues.indexOf("");
+    if (firstEmptyIndex !== -1) {
+      summaryValues = summaryValues.slice(0, firstEmptyIndex);
+    }
+    var uniqueSummaryTypeValues = Array.from(new Set(summaryValues));
     var uniqueMonthlyTypeValues = Array.from(new Set(sheet.getRange(myNumbers.expenseFirstRow, myNumbers.expenseTypeColumn, myNumbers.expenseLastRow - myNumbers.expenseFirstRow, myNumbers.expenseTypeColumn).getValues().flat()));
 
     var uniqueTypeValues = uniqueSummaryTypeValues.concat(uniqueMonthlyTypeValues);

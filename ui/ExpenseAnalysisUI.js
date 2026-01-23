@@ -74,14 +74,14 @@ function generateAgentHtml(results, options) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Expense Analysis - \${results.currentMonth} \${results.currentYear}</title>
+    <title>Expense Analysis - ${results.currentMonth} ${results.currentYear}</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: \${isEmbedded ? 'transparent' : (isStandalone ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#fff')};
+            background: ${isEmbedded ? 'transparent' : (isStandalone ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#fff')};
             min-height: 100vh;
-            padding: \${isEmbedded ? '0' : (isStandalone ? '10px' : '0')};
+            padding: ${isEmbedded ? '0' : (isStandalone ? '10px' : '0')};
             color: #333;
             overflow-x: hidden;
         }
@@ -89,22 +89,22 @@ function generateAgentHtml(results, options) {
             max-width: 600px; 
             margin: 0 auto;
             position: relative;
-            background: \${isStandalone || isEmbedded ? 'transparent' : '#fff'};
+            background: ${isStandalone || isEmbedded ? 'transparent' : '#fff'};
         }
         
         .header {
-            background: \${isStandalone || isEmbedded ? 'rgba(255,255,255,0.95)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
-            color: \${isStandalone || isEmbedded ? '#333' : 'white'};
-            border-radius: \${isStandalone || isEmbedded ? '12px' : '0 0 12px 12px'};
+            background: ${isStandalone || isEmbedded ? 'rgba(255,255,255,0.95)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
+            color: ${isStandalone || isEmbedded ? '#333' : 'white'};
+            border-radius: ${isStandalone || isEmbedded ? '12px' : '0 0 12px 12px'};
             padding: 16px;
             text-align: center;
             margin-bottom: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             position: relative;
-            \${isEmbedded ? 'margin-top: 5px;' : ''}
+            ${isEmbedded ? 'margin-top: 5px;' : ''}
         }
         .header h1 { font-size: 22px; margin-bottom: 2px; }
-        .header .date { color: \${isStandalone || isEmbedded ? '#667eea' : 'rgba(255,255,255,0.9)'}; font-weight: 600; font-size: 15px; }
+        .header .date { color: ${isStandalone || isEmbedded ? '#667eea' : 'rgba(255,255,255,0.9)'}; font-weight: 600; font-size: 15px; }
         
         .menu-btn {
             position: absolute;
@@ -119,7 +119,7 @@ function generateAgentHtml(results, options) {
             justify-content: center;
             cursor: pointer;
             font-size: 24px;
-            color: \${isStandalone || isEmbedded ? '#667eea' : 'white'};
+            color: ${isStandalone || isEmbedded ? '#667eea' : 'white'};
             -webkit-tap-highlight-color: transparent;
             z-index: 10;
         }
@@ -222,7 +222,7 @@ function generateAgentHtml(results, options) {
         .recalculate-btn:disabled { opacity: 0.6; }
 
         .footer {
-            text-align: center; color: \${isStandalone || isEmbedded ? 'rgba(0,0,0,0.4)' : '#aaa'};
+            text-align: center; color: ${isStandalone || isEmbedded ? 'rgba(0,0,0,0.4)' : '#aaa'};
             font-size: 10px; padding: 10px;
         }
     </style>
@@ -231,7 +231,7 @@ function generateAgentHtml(results, options) {
     <div class="container">
         <div class="header">
             <h1>📊 Expense Analysis</h1>
-            <div class="date">\${results.currentMonth} \${results.currentYear}</div>
+            <div class="date">${results.currentMonth} ${results.currentYear}</div>
             <div class="menu-btn" onclick="toggleAssumptions(true)" title="Forecast Assumptions">⋮</div>
         </div>
         
@@ -239,79 +239,79 @@ function generateAgentHtml(results, options) {
             <div class="card-title">Monthly Comparison</div>
             <div class="metric">
                 <span class="metric-label">Current Month Total</span>
-                <span class="metric-value">\${formatCurrency(results.comparison.current?.totalSpend)}</span>
-            </div>\`;
+                <span class="metric-value">${formatCurrency(results.comparison.current?.totalSpend)}</span>
+            </div>`;
 
     if (results.comparison.vsPrevMonth) {
         const pct = parseFloat(results.comparison.vsPrevMonth.percentChange);
         const colorClass = pct > 0 ? 'negative' : 'positive';
-        html += \`
+        html += `
             <div class="metric">
-                <span class="metric-label">vs \${results.comparison.previousMonthName}</span>
-                <span class="metric-value \${colorClass}">\${pct > 0 ? '+' : ''}\${pct}%</span>
-            </div>\`;
+                <span class="metric-label">vs ${results.comparison.previousMonthName}</span>
+                <span class="metric-value ${colorClass}">${pct > 0 ? '+' : ''}${pct}%</span>
+            </div>`;
     }
 
     if (results.comparison.vsYearAgo) {
         const pct = parseFloat(results.comparison.vsYearAgo.percentChange);
         const colorClass = pct > 0 ? 'negative' : 'positive';
-        html += \`
+        html += `
             <div class="metric">
-                <span class="metric-label">vs \${results.currentMonth} \${results.comparison.yearAgoYear} (YoY)</span>
-                <span class="metric-value \${colorClass}">\${pct > 0 ? '+' : ''}\${pct}%</span>
-            </div>\`;
+                <span class="metric-label">vs ${results.currentMonth} ${results.comparison.yearAgoYear} (YoY)</span>
+                <span class="metric-value ${colorClass}">${pct > 0 ? '+' : ''}${pct}%</span>
+            </div>`;
     }
 
-    html += \`
+    html += `
         </div>
         
         <div class="card">
             <div class="card-title">Annual Forecast</div>
             <div class="metric">
-                <span class="metric-label">YTD Posted (\${results.forecast.monthsCompleted} mo)</span>
-                <span class="metric-value">\${formatCurrency(results.forecast.ytdPosted)}</span>
+                <span class="metric-label">YTD Posted (${results.forecast.monthsCompleted} mo)</span>
+                <span class="metric-value">${formatCurrency(results.forecast.ytdPosted)}</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Projected Annual Total</span>
-                <span class="metric-value big">\${formatCurrency(results.forecast.annualForecast)}</span>
-            </div>\`;
+                <span class="metric-value big">${formatCurrency(results.forecast.annualForecast)}</span>
+            </div>`;
 
     if (results.forecast.vsLastYear.percentChange) {
         const pct = parseFloat(results.forecast.vsLastYear.percentChange);
         const colorClass = pct > 0 ? 'negative' : 'positive';
-        html += \`
+        html += `
             <div class="metric">
-                <span class="metric-label">vs Last Year (\${formatCurrency(results.forecast.previousYearTotal)})</span>
-                <span class="metric-value \${colorClass}">\${pct > 0 ? '+' : ''}\${pct}%</span>
-            </div>\`;
+                <span class="metric-label">vs Last Year (${formatCurrency(results.forecast.previousYearTotal)})</span>
+                <span class="metric-value ${colorClass}">${pct > 0 ? '+' : ''}${pct}%</span>
+            </div>`;
     }
 
-    html += \`
-        </div>\`;
+    html += `
+        </div>`;
 
     if (results.spikes.hasAnomalies) {
-        html += \`
+        html += `
         <div class="card">
-            <div class="card-title">⚠️ Expense Alerts</div>\`;
+            <div class="card-title">⚠️ Expense Alerts</div>`;
         results.spikes.spikes.forEach(s => {
-            html += \`<div class="spike"><strong>\${s.category}</strong><span class="negative">+\${s.percentChange}%</span></div>\`;
+            html += `<div class="spike"><strong>${s.category}</strong><span class="negative">+${s.percentChange}%</span></div>`;
         });
         results.spikes.aboveNormal.forEach(s => {
-            html += \`<div class="above-normal"><strong>\${s.category}</strong><span class="negative">+\${s.percentChange}%</span></div>\`;
+            html += `<div class="above-normal"><strong>${s.category}</strong><span class="negative">+${s.percentChange}%</span></div>`;
         });
-        html += \`</div>\`;
+        html += `</div>`;
     }
 
     if (results.aiInsights) {
-        html += \`<div class="ai-section"><div class="ai-title">🤖 AI Analysis</div><div>\${results.aiInsights}</div></div>\`;
+        html += `<div class="ai-section"><div class="ai-title">🤖 AI Analysis</div><div>${results.aiInsights}</div></div>`;
     }
 
     /* Modal for Assumptions */
-    html += \`
+    html += `
     <div class="modal-overlay" id="modalOverlay" onclick="if(event.target==this) toggleAssumptions(false)">
         <div class="modal-content">
             <div class="modal-close" onclick="toggleAssumptions(false)">×</div>
-            <div class="assumptions-title">📝 Forecast Assumptions (Monthly)</div>\`;
+            <div class="assumptions-title">📝 Forecast Assumptions (Monthly)</div>`;
 
     const categories = [
         { id: 'groceries', label: 'Groceries', val: results.forecast.nonPostedBreakdown.groceries },
@@ -321,34 +321,34 @@ function generateAgentHtml(results, options) {
     ];
 
     categories.forEach(cat => {
-        html += \`<div class="item-row">
-            <span class="item-label">\${cat.label}</span>
+        html += `<div class="item-row">
+            <span class="item-label">${cat.label}</span>
             <span class="item-value">
-                \${isReadOnly
+                ${isReadOnly
                 ? formatCurrency(cat.val)
-                : \`$ <input type="number" id="\${cat.id}" value="\${cat.val}" min="0" step="50" oninput="updateTotal()">\`}
+                : `$ <input type="number" id="${cat.id}" value="${cat.val}" min="0" step="50" oninput="updateTotal()">`}
             </span>
-        </div>\`;
+        </div>`;
     });
 
-    html += \`
+    html += `
             <div class="total-row">
                 <span>Total Monthly Non-Posted</span>
-                <span id="totalMonthly">\${formatCurrency(results.forecast.nonPostedMonthly)}</span>
-            </div>\`;
+                <span id="totalMonthly">${formatCurrency(results.forecast.nonPostedMonthly)}</span>
+            </div>`;
 
     if (!isReadOnly) {
-        html += \`<button class="recalculate-btn" id="recalcBtn" onclick="recalculateForecast()">🔄 Recalculate Forecast</button>\`;
+        html += `<button class="recalculate-btn" id="recalcBtn" onclick="recalculateForecast()">🔄 Recalculate Forecast</button>`;
     }
 
-    html += \`
+    html += `
         </div>
     </div>
     
     <div class="footer">Generated by Expense Analysis Agent</div>
-    </div>\`;
+    </div>`;
 
-    html += \`
+    html += `
     <script>
         function toggleAssumptions(show) {
             document.getElementById('modalOverlay').style.display = show ? 'flex' : 'none';
@@ -392,6 +392,6 @@ function generateAgentHtml(results, options) {
                 .recalculateWithAssumptions(groceries, online, gasoline, misc);
         }
     </script>
-    </body></html>\`;
+    </body></html>`;
     return html;
 }
