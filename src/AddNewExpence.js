@@ -149,7 +149,7 @@ function addNewExpenseAI(mode) {
   template.expenseTypes = Array.from(expenseTypes).sort();
   template.expensePeriods = Array.from(expensePeriods).sort();
   template.spouseNames = spouseNames;
-  var html = template.evaluate().setWidth(400).setHeight(560); // Increased height for new fields
+  var html = template.evaluate().setWidth(450).setHeight(650); // Increased for better layout
   SpreadsheetApp.getUi().showModalDialog(html, 'Add New Expense');
 }
 

@@ -1,6 +1,17 @@
-function runAnalytics() {
+function runAnalytics(e) {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const ui = SpreadsheetApp.getUi();
+
+
+    if (e && e.authMode) {
+        // The function was called by a trigger
+        Logger.log('runAnalytics called by a trigger');
+        const trigger = true;
+    } else {
+        const ui = SpreadsheetApp.getUi();
+        const trigger = false;
+        Logger.log('runAnalytics NOT called by a trigger');
+    }
+
     const myNumbers = new staticNumbers();
 
     // 1. Identify current year to include it
@@ -52,7 +63,8 @@ function runAnalytics() {
     }
 
     if (rawYearlyData.length === 0) {
-        ui.alert("No 'Home payments' files found for years up to " + limitYear);
+        var msg = "No 'Home payments' files found for years up to " + limitYear;
+        (!trigger) ? ui.alert(msg) : console.log(msg);
         return;
     }
 
@@ -98,7 +110,11 @@ function runAnalytics() {
 
     // 6. Internal Data Placement on ACTIVE Summary Tab
     const summarySheet = ss.getSheetByName("Summary");
-    if (!summarySheet) return ui.alert("Summary sheet not found in the current spreadsheet.");
+    if (!summarySheet) {
+        var msg = "Summary sheet not found in the current spreadsheet.";
+        (!trigger) ? ui.alert(msg) : console.log(msg);
+        return;
+    }
 
     // Remove existing Historical section and charts to prevent duplication
     const lastRowOfData = summarySheet.getLastRow();
