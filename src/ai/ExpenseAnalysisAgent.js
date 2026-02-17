@@ -138,6 +138,11 @@ function recalculateWithAssumptions(groceries, onlinePurchases, gasoline, misc) 
 
 /**
  * Gathers monthly comparison data: current, previous month, and YoY.
+ * Applies a projection multiplier to the current month's spend based on
+ * how far into the month we are, so comparisons against full months are fairer:
+ *   - Day in first 1/3 of month  → triple the amount (3×)
+ *   - Day between 1/3 and 1/2    → double the amount (2×)
+ *   - Day past 1/2               → use actual amount  (1×)
  */
 function getMonthlyComparisonData(ss, currentMonthIndex, currentYear, prevMonthIndex, prevMonthYear, myNumbers, months) {
     const currentMonthName = months[currentMonthIndex];
@@ -156,12 +161,33 @@ function getMonthlyComparisonData(ss, currentMonthIndex, currentYear, prevMonthI
     const yearAgoSS = getSpreadsheetForYear(yearAgoYear);
     const yearAgoStats = yearAgoSS ? getMonthStats(yearAgoSS, currentMonthName, yearAgoYear, myNumbers) : null;
 
-    // Calculate changes
+    // --- Projection multiplier based on current date within the month ---
+    const now = new Date();
+    const currentDay = now.getDate();
+    // Total days in the current month
+    const daysInMonth = new Date(currentYear, currentMonthIndex + 1, 0).getDate();
+    const oneThird = daysInMonth / 3;
+    const oneHalf = daysInMonth / 2;
+
+    let projectionMultiplier = 1;
+    let projectionLabel = 'actual (past mid-month)';
+    if (currentDay <= oneThird) {
+        projectionMultiplier = 3;
+        projectionLabel = '3× estimate (first 1/3 of month)';
+    } else if (currentDay <= oneHalf) {
+        projectionMultiplier = 2;
+        projectionLabel = '2× estimate (first 1/2 of month)';
+    }
+
+    // Estimated current month spend used for comparisons
+    const estimatedCurrentSpend = currentStats ? currentStats.totalSpend * projectionMultiplier : 0;
+
+    // Calculate changes using the estimated (projected) current month spend
     let vsPrevMonth = null;
     let vsYearAgo = null;
 
     if (currentStats && prevStats && prevStats.totalSpend > 0) {
-        const diff = currentStats.totalSpend - prevStats.totalSpend;
+        const diff = estimatedCurrentSpend - prevStats.totalSpend;
         vsPrevMonth = {
             difference: diff,
             percentChange: ((diff / prevStats.totalSpend) * 100).toFixed(1)
@@ -169,7 +195,7 @@ function getMonthlyComparisonData(ss, currentMonthIndex, currentYear, prevMonthI
     }
 
     if (currentStats && yearAgoStats && yearAgoStats.totalSpend > 0) {
-        const diff = currentStats.totalSpend - yearAgoStats.totalSpend;
+        const diff = estimatedCurrentSpend - yearAgoStats.totalSpend;
         vsYearAgo = {
             difference: diff,
             percentChange: ((diff / yearAgoStats.totalSpend) * 100).toFixed(1)
@@ -185,7 +211,15 @@ function getMonthlyComparisonData(ss, currentMonthIndex, currentYear, prevMonthI
         yearAgo: yearAgoStats,
         yearAgoYear: yearAgoYear,
         vsPrevMonth: vsPrevMonth,
-        vsYearAgo: vsYearAgo
+        vsYearAgo: vsYearAgo,
+        projection: {
+            currentDay: currentDay,
+            daysInMonth: daysInMonth,
+            multiplier: projectionMultiplier,
+            label: projectionLabel,
+            estimatedMonthlySpend: estimatedCurrentSpend,
+            actualSpendToDate: currentStats ? currentStats.totalSpend : 0
+        }
     };
 }
 
@@ -356,11 +390,12 @@ function generateAgentAnalysis(comparisonData, forecastData, spikeAnalysis) {
 Be concise, helpful, and use bold text for key numbers. Format as HTML list (<ul><li>...</li></ul>).Also, please advice of assumptions made in html (projections only, list assumptions for gasoline, misc, groceries, online purchases)
 
 CURRENT MONTH: ${comparisonData.currentMonthName}
-- Total Spend: ${formatCurrency(comparisonData.current?.totalSpend)}
+- Actual Spend to Date (Day ${comparisonData.projection?.currentDay} of ${comparisonData.projection?.daysInMonth}): ${formatCurrency(comparisonData.projection?.actualSpendToDate)}
+- Estimated Monthly Spend: ${formatCurrency(comparisonData.projection?.estimatedMonthlySpend)} (${comparisonData.projection?.label})
 - Top Category: ${comparisonData.current?.topCategory?.name} (${formatCurrency(comparisonData.current?.topCategory?.amount)})
 - Highest Single Expense: ${comparisonData.current?.highestSpend?.description} (${formatCurrency(comparisonData.current?.highestSpend?.amount)})
 
-COMPARISONS:
+COMPARISONS (based on estimated monthly spend):
 - vs Previous Month (${comparisonData.previousMonthName}): ${comparisonData.vsPrevMonth ? comparisonData.vsPrevMonth.percentChange + '%' : 'N/A'}
 - vs Same Month Last Year: ${comparisonData.vsYearAgo ? comparisonData.vsYearAgo.percentChange + '%' : 'N/A'}
 

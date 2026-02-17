@@ -238,8 +238,15 @@ function generateAgentHtml(results, options) {
         <div class="card">
             <div class="card-title">Monthly Comparison</div>
             <div class="metric">
-                <span class="metric-label">Current Month Total</span>
-                <span class="metric-value">${formatCurrency(results.comparison.current?.totalSpend)}</span>
+                <span class="metric-label">Spend to Date (Day ${results.comparison.projection?.currentDay || '?'} of ${results.comparison.projection?.daysInMonth || '?'})</span>
+                <span class="metric-value">${formatCurrency(results.comparison.projection?.actualSpendToDate)}</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Estimated Monthly Total</span>
+                <span class="metric-value big">${formatCurrency(results.comparison.projection?.estimatedMonthlySpend)}</span>
+            </div>
+            <div style="font-size:11px; color:#999; padding:2px 0 6px; font-style:italic;">
+                ${results.comparison.projection?.label || ''}
             </div>`;
 
     if (results.comparison.vsPrevMonth) {
