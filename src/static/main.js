@@ -93,7 +93,7 @@ function staticNumbers() { // constructor function
   // Expense Analysis Agent - Non-posted monthly projections
   this.agentGroceriesMonthly = 800;
   this.agentOnlinePurchasesMonthly = 800;
-  this.agentGasolineMonthly = 400;
+  this.agentGasolineMonthly = 0;
   this.agentMiscMonthly = 1000;
 
   this.privilegedMethod = function () {
