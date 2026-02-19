@@ -365,7 +365,7 @@ function validatePeriod(row, col) {
 
   // Get unique periods from the active sheet's period column
   var periods = new Set();
-  var lastFilledRow = getLastRowBeforeEmpty(summarySheet);
+  var lastFilledRow = new myUtil().getLastRowBeforeEmpty(summarySheet);
   var values = sheet.getRange(myNumbers.expenseFirstRow, myNumbers.expencePeriodColumn, lastFilledRow - myNumbers.expenseFirstRow + 1).getValues().flat();
   values.forEach(function (val) {
     if (val) periods.add(val.toString().trim());
