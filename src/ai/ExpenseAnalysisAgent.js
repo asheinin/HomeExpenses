@@ -270,16 +270,16 @@ function calculateAnnualForecast(ss, currentMonthIndex, currentYear, myNumbers, 
     // Non-posted monthly projections - use custom values if provided, else defaults
     const groceriesMonthly = (customAssumptions && customAssumptions.groceries !== undefined)
         ? customAssumptions.groceries
-        : (myNumbers.agentGroceriesMonthly || 800);
+        : (myNumbers.agentGroceriesMonthly || 0);
     const onlinePurchasesMonthly = (customAssumptions && customAssumptions.onlinePurchases !== undefined)
         ? customAssumptions.onlinePurchases
-        : (myNumbers.agentOnlinePurchasesMonthly || 800);
+        : (myNumbers.agentOnlinePurchasesMonthly || 0);
     const gasolineMonthly = (customAssumptions && customAssumptions.gasoline !== undefined)
         ? customAssumptions.gasoline
-        : (myNumbers.agentGasolineMonthly || 400);
+        : (myNumbers.agentGasolineMonthly || 0);
     const miscMonthly = (customAssumptions && customAssumptions.misc !== undefined)
         ? customAssumptions.misc
-        : (myNumbers.agentMiscMonthly || 1000);
+        : (myNumbers.agentMiscMonthly || 0);
     const nonPostedMonthly = groceriesMonthly + onlinePurchasesMonthly + gasolineMonthly + miscMonthly;
 
     // Remaining months in the year
