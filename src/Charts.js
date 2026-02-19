@@ -184,3 +184,20 @@ function getLastRowIncludingCharts(sheet) {
 }
 
 
+
+/**
+ * Finds the last filled row in a sheet before a completely empty row gap.
+ * @param {Sheet} sheet - The sheet to analyze
+ * @returns {number} - The 1-based row index of the last filled row before the first empty row
+ */
+function getLastRowBeforeEmpty(sheet) {
+  const data = sheet.getDataRange().getValues();
+  for (let i = 0; i < data.length; i++) {
+    const isRowEmpty = data[i].every(cell => cell === "" || cell === null || cell === undefined);
+    if (isRowEmpty) {
+      return i;
+    }
+  }
+  var lastContiniouslyFilledRow = data.length;
+  return lastContiniouslyFilledRow;
+}

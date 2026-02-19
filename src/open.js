@@ -273,11 +273,11 @@ function edit() {
   } else {
     if ((row > myNumbers.expenseCarryOverRow) && (row <= myNumbers.expenseLastRow)) {
       var splitRange = sheet.getRange(row, myNumbers.expenceSplitColumn);
-      var splitRange1 = sheet.getRange(row, myNumbers.expenceSplit1Column); //5 Goldy
-      var splitRange2 = sheet.getRange(row, myNumbers.expenceSplit2Column); //6 Alex 
+      var splitRange1 = sheet.getRange(row, myNumbers.expenceSplit1Column); //5 Sp1
+      var splitRange2 = sheet.getRange(row, myNumbers.expenceSplit2Column); //6 Sp2 
       var amountRange = sheet.getRange(row, myNumbers.expenseAmountColumn);
-      var splitDashRange1 = rs.getRange(myNumbers.dashSplitRow, myNumbers.dashSp1SplitColumn); //2 Alex
-      var splitDashRange2 = rs.getRange(myNumbers.dashSplitRow, myNumbers.dashSp2SplitColumn); //3 Goldy 
+      var splitDashRange1 = rs.getRange(myNumbers.dashSplitRow, myNumbers.dashSp1SplitColumn); //2 Sp1
+      var splitDashRange2 = rs.getRange(myNumbers.dashSplitRow, myNumbers.dashSp2SplitColumn); //3 Sp2 
 
       var formulaSp1 = '=IF (' + splitRange.getA1Notation() + '<> "N", IF(ISBLANK(' + amountRange.getA1Notation() + '),"", ROUND(';
       formulaSp1 += amountRange.getA1Notation() + '*' + rsName + '!$' + splitDashRange1.getA1Notation().slice(0, 1);
@@ -365,7 +365,8 @@ function validatePeriod(row, col) {
 
   // Get unique periods from the active sheet's period column
   var periods = new Set();
-  var values = sheet.getRange(myNumbers.expenseFirstRow, myNumbers.expencePeriodColumn, myNumbers.expenseLastRow - myNumbers.expenseFirstRow + 1).getValues().flat();
+  var lastFilledRow = getLastRowBeforeEmpty(summarySheet);
+  var values = sheet.getRange(myNumbers.expenseFirstRow, myNumbers.expencePeriodColumn, lastFilledRow - myNumbers.expenseFirstRow + 1).getValues().flat();
   values.forEach(function (val) {
     if (val) periods.add(val.toString().trim());
   });

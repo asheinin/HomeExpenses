@@ -2,6 +2,7 @@ function runAnalytics(e) {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
 
 
+    /*
     if (e && e.authMode) {
         // The function was called by a trigger
         Logger.log('runAnalytics called by a trigger');
@@ -11,6 +12,10 @@ function runAnalytics(e) {
         const trigger = false;
         Logger.log('runAnalytics NOT called by a trigger');
     }
+
+    const ui = SpreadsheetApp.getUi();
+    const trigger = false;
+    */
 
     const myNumbers = new staticNumbers();
 
@@ -64,7 +69,7 @@ function runAnalytics(e) {
 
     if (rawYearlyData.length === 0) {
         var msg = "No 'Home payments' files found for years up to " + limitYear;
-        (!trigger) ? ui.alert(msg) : console.log(msg);
+        //    (!trigger) ? ui.alert(msg) : console.log(msg);
         return;
     }
 
@@ -112,7 +117,7 @@ function runAnalytics(e) {
     const summarySheet = ss.getSheetByName("Summary");
     if (!summarySheet) {
         var msg = "Summary sheet not found in the current spreadsheet.";
-        (!trigger) ? ui.alert(msg) : console.log(msg);
+        //    (!trigger) ? ui.alert(msg) : console.log(msg);
         return;
     }
 
