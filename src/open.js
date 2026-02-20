@@ -326,7 +326,7 @@ function validateType(row, col) {
     var range = sheet.getRange(row, myNumbers.expenseTypeColumn);
     console.log(myNumbers.expenseTypeColumn + " " + col);
     var summaryValues = summarySheet.getRange(myNumbers.expenseFirstRow, myNumbers.expenseTypeColumn, lastFilledRow - myNumbers.expenseFirstRow + 1, 1).getValues().flat();
-    console.log("drop down list: myNumbers.expenseFirstRow + " " + myNumbers.expenseTypeColumn + " " + lastFilledRow - myNumbers.expenseFirstRow + " " + 1);
+    console.log("drop down list: "myNumbers.expenseFirstRow + " " + myNumbers.expenseTypeColumn + " " + lastFilledRow - myNumbers.expenseFirstRow + " " + 1);
 
     if (firstEmptyIndex !== -1) {
       summaryValues = summaryValues.slice(0, firstEmptyIndex);
