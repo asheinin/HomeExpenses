@@ -125,7 +125,7 @@ function runAnalytics(e) {
     const lastRowOfData = summarySheet.getLastRow();
     const existingHeaders = summarySheet.getRange(1, 1, Math.max(lastRowOfData, 1), 25).getValues();
 
-    let startRow = getLastRowIncludingCharts(summarySheet) + 1;
+    let startRow = new myUtil().getLastRowIncludingCharts(summarySheet) + 1;
 
     for (let i = 0; i < existingHeaders.length; i++) {
         const headerVal = existingHeaders[i][myNumbers.summaryAnalyticsYearColumn - 1];
@@ -232,7 +232,7 @@ function runYearComparison() {
         return;
     }
 
-    const lastRowWithCharts = getLastRowIncludingCharts(summarySheet);
+    const lastRowWithCharts = new myUtil().getLastRowIncludingCharts(summarySheet);
     const lastRowOfData = summarySheet.getLastRow();
 
     // 4. Extract monthly data from both files' Dashboard tabs
