@@ -141,7 +141,7 @@ function recalculateWithAssumptions(groceries, onlinePurchases, gasoline, misc) 
  * Applies a projection multiplier to the current month's spend based on
  * how far into the month we are, so comparisons against full months are fairer:
  *   - Day in first 1/3 of month  → double the amount (2×)
- *   - Day between 1/3 and 1/2    → 1.5 the amount (1.5×)
+ *   - Day between 1/3 and 1/2    → 1.2 the amount (1.2×)
  *   - Day past 1/2               → use actual amount  (1×)
  */
 function getMonthlyComparisonData(ss, currentMonthIndex, currentYear, prevMonthIndex, prevMonthYear, myNumbers, months) {
@@ -175,8 +175,8 @@ function getMonthlyComparisonData(ss, currentMonthIndex, currentYear, prevMonthI
         projectionMultiplier = 2;
         projectionLabel = '2× estimate (first 1/3 of month)';
     } else if (currentDay <= oneHalf) {
-        projectionMultiplier = 1.5;
-        projectionLabel = '1.5× estimate (between 1/3 and 1/2 of month)';
+        projectionMultiplier = 1.2;
+        projectionLabel = '1.2× estimate (between 1/3 and 1/2 of month)';
     }
 
     // Estimated current month spend used for comparisons
