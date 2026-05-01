@@ -162,8 +162,34 @@
       const firstDay = `${currentYear}-01-01`;
       const lastDay = `${currentYear}-12-31`;
       
-      document.getElementById('fromDate').value = firstDay;
-      document.getElementById('toDate').value = lastDay;
+      const fromDateInput = document.getElementById('fromDate');
+      const toDateInput = document.getElementById('toDate');
+
+      fromDateInput.value = firstDay;
+      toDateInput.value = lastDay;
+
+      // Clear errors on input change
+      fromDateInput.addEventListener('input', clearErrors);
+      toDateInput.addEventListener('input', clearErrors);
+
+      // Auto-populate To Date when From Date changes
+      fromDateInput.addEventListener('change', function() {
+        if (this.value) {
+          const fromDateObj = new Date(this.value + "T00:00:00");
+          if (!isNaN(fromDateObj.getTime())) {
+            // Calculate last date of 12 month period (add 1 year, subtract 1 day)
+            const toDateObj = new Date(fromDateObj);
+            toDateObj.setFullYear(toDateObj.getFullYear() + 1);
+            toDateObj.setDate(toDateObj.getDate() - 1);
+            
+            const yyyy = toDateObj.getFullYear();
+            const mm = String(toDateObj.getMonth() + 1).padStart(2, '0');
+            const dd = String(toDateObj.getDate()).padStart(2, '0');
+            
+            toDateInput.value = `${yyyy}-${mm}-${dd}`;
+          }
+        }
+      });
     });
 
     function submitForm() {
