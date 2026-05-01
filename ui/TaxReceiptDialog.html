@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #667eea;
+      --primary-dark: #764ba2;
+      --text: #333;
+      --text-light: #666;
+      --bg: #f8f9fa;
+      --card-bg: #fff;
+      --error: #d93025;
+      --success: #2e7d32;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .form-container {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-light);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input[type="date"] {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      font-family: inherit;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      box-shadow: 0 4px 10px rgba(118, 75, 162, 0.2);
+    }
+
+    .btn-secondary {
+      background: #f1f3f4;
+      color: var(--text);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .error-box {
+      background: #fce8e6;
+      color: var(--error);
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      display: none;
+      border: 1px solid #f5c2c7;
+    }
+
+    .input-error {
+      border-color: var(--error) !important;
+      background: #fff8f8;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="form-container">
+    <h2>📄 Tax Receipt Dates</h2>
+
+    <div id="errorMessage" class="error-box"></div>
+
+    <form id="taxReceiptForm">
+      <div class="form-group">
+        <label for="fromDate">From Date</label>
+        <input type="date" id="fromDate" required>
+      </div>
+
+      <div class="form-group">
+        <label for="toDate">To Date</label>
+        <input type="date" id="toDate" required>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn-primary" id="submit-btn" onclick="submitForm()">Generate Receipt</button>
+        <button type="button" class="btn-secondary" onclick="google.script.host.close()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Set default dates to Jan 1st and Dec 31st of the current year
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      
+      // format to YYYY-MM-DD
+      const firstDay = `${currentYear}-01-01`;
+      const lastDay = `${currentYear}-12-31`;
+      
+      document.getElementById('fromDate').value = firstDay;
+      document.getElementById('toDate').value = lastDay;
+    });
+
+    function submitForm() {
+      const btn = document.getElementById('submit-btn');
+      
+      var fromDateStr = document.getElementById('fromDate').value;
+      var toDateStr = document.getElementById('toDate').value;
+
+      clearErrors();
+
+      var errors = [];
+      if (!fromDateStr) {
+        errors.push('From Date is required');
+        document.getElementById('fromDate').classList.add('input-error');
+      }
+      if (!toDateStr) {
+        errors.push('To Date is required');
+        document.getElementById('toDate').classList.add('input-error');
+      }
+
+      if (fromDateStr && toDateStr) {
+        const fromDate = new Date(fromDateStr + "T00:00:00");
+        const toDate = new Date(toDateStr + "T00:00:00");
+
+        if (fromDate > toDate) {
+           errors.push('From Date must be before To Date');
+           document.getElementById('fromDate').classList.add('input-error');
+           document.getElementById('toDate').classList.add('input-error');
+        } else {
+           const monthsDiff = (toDate.getFullYear() - fromDate.getFullYear()) * 12 + (toDate.getMonth() - fromDate.getMonth());
+           
+           if (monthsDiff > 11) {
+             // Example: Aug 2025 (month 7) to Aug 2026 (month 7) is exactly 12 months diff => 13 months duration.
+             // Aug 2025 to July 2026 is 11 months diff => 12 months duration.
+             errors.push('Date range cannot exceed 12 consecutive months.');
+             document.getElementById('fromDate').classList.add('input-error');
+             document.getElementById('toDate').classList.add('input-error');
+           }
+
+           const yearDiff = toDate.getFullYear() - fromDate.getFullYear();
+           if (yearDiff > 1) {
+             errors.push('Date range cannot span more than 2 calendar years.');
+             document.getElementById('fromDate').classList.add('input-error');
+             document.getElementById('toDate').classList.add('input-error');
+           }
+        }
+      }
+
+      if (errors.length > 0) {
+        var errorDiv = document.getElementById('errorMessage');
+        errorDiv.innerHTML = '<strong>Validation Error:</strong><br>' + errors.join('<br>');
+        errorDiv.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+
+      google.script.run
+        .withSuccessHandler(closeDialog)
+        .withFailureHandler(function (err) {
+          alert('Error: ' + err);
+          btn.disabled = false;
+          btn.textContent = 'Generate Receipt';
+        })
+        .processEOYDocument(fromDateStr, toDateStr);
+    }
+
+    function closeDialog() {
+      google.script.host.close();
+    }
+
+    function clearErrors() {
+      document.getElementById('errorMessage').style.display = 'none';
+      document.getElementById('fromDate').classList.remove('input-error');
+      document.getElementById('toDate').classList.remove('input-error');
+    }
+  </script>
+</body>
+
+</html>
