@@ -158,7 +158,11 @@
             <option value="11">November</option>
             <option value="12">December</option>
           </select>
-          <select id="fromYear" required></select>
+          <select id="fromYear" required>
+            <? for (var i = 0; i < availableYears.length; i++) { ?>
+            <option value="<?= availableYears[i] ?>"><?= availableYears[i] ?></option>
+            <? } ?>
+          </select>
         </div>
       </div>
 
@@ -179,7 +183,11 @@
             <option value="11">November</option>
             <option value="12">December</option>
           </select>
-          <select id="toYear" required></select>
+          <select id="toYear" required>
+            <? for (var i = 0; i < availableYears.length; i++) { ?>
+            <option value="<?= availableYears[i] ?>"><?= availableYears[i] ?></option>
+            <? } ?>
+          </select>
         </div>
       </div>
 
@@ -191,28 +199,19 @@
   </div>
 
   <script>
-    const availableYears = <?= availableYears ?>;
-    
     document.addEventListener("DOMContentLoaded", function() {
       const fromYearSelect = document.getElementById('fromYear');
       const toYearSelect = document.getElementById('toYear');
-      
-      // Populate Year Dropdowns
-      availableYears.forEach(year => {
-        let opt1 = document.createElement('option');
-        opt1.value = year;
-        opt1.textContent = year;
-        fromYearSelect.appendChild(opt1);
-        
-        let opt2 = document.createElement('option');
-        opt2.value = year;
-        opt2.textContent = year;
-        toYearSelect.appendChild(opt2);
-      });
 
-      // Set default dates to Jan and Dec of the active year
+      // Default dates: Jan and Dec of active/current year
       const currentYear = new Date().getFullYear();
-      let defaultYear = availableYears.includes(currentYear) ? currentYear : availableYears[availableYears.length - 1];
+      
+      // Determine if current year is in dropdown, otherwise default to latest available
+      let defaultYear = currentYear;
+      if (fromYearSelect.options.length > 0) {
+        let hasCurrentYear = Array.from(fromYearSelect.options).some(opt => opt.value == currentYear);
+        defaultYear = hasCurrentYear ? currentYear : fromYearSelect.options[fromYearSelect.options.length - 1].value;
+      }
       
       document.getElementById('fromMonth').value = '01';
       fromYearSelect.value = defaultYear;

@@ -19,7 +19,7 @@ function createEOYDocument() {
   }
   
   availableYears.sort(function(a, b){return a-b});
-  template.availableYears = JSON.stringify(availableYears);
+  template.availableYears = availableYears;
 
   var htmlDlg = template.evaluate()
     .setSandboxMode(HtmlService.SandboxMode.IFRAME)
