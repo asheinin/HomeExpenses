@@ -98,9 +98,12 @@ function processEOYDocument(startMonthStr, endMonthStr) {
       values.forEach(row => {
         const type = row[myNumbers.expenseTypeColumn - 1];
         const description = row[myNumbers.expenseDescrColumn - 1];
-        const amount = row[myNumbers.expenseAmountColumn - 1];
+        let amount = row[myNumbers.expenseAmountColumn - 1];
 
         if (!type || !amount) return;
+
+        // Ensure amount is a float
+        amount = parseFloat(amount) || 0;
 
         if (!data[type]) {
           data[type] = {
@@ -113,6 +116,10 @@ function processEOYDocument(startMonthStr, endMonthStr) {
           data[type].descriptions.add(description);
         }
         data[type].totalAmount += amount;
+        
+        if (type.toString().trim().toLowerCase() === "eat out") {
+          console.log(`Eat Out found in ${sheetName}: amount=${amount}, running total=${data[type].totalAmount}`);
+        }
       });
     });
     
