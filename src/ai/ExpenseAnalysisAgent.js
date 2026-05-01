@@ -140,8 +140,8 @@ function recalculateWithAssumptions(groceries, onlinePurchases, gasoline, misc) 
  * Gathers monthly comparison data: current, previous month, and YoY.
  * Applies a projection multiplier to the current month's spend based on
  * how far into the month we are, so comparisons against full months are fairer:
- *   - Day in first 1/3 of month  → triple the amount (3×)
- *   - Day between 1/3 and 1/2    → double the amount (2×)
+ *   - Day in first 1/3 of month  → double the amount (2×)
+ *   - Day between 1/3 and 1/2    → 1.2 the amount (1.2×)
  *   - Day past 1/2               → use actual amount  (1×)
  */
 function getMonthlyComparisonData(ss, currentMonthIndex, currentYear, prevMonthIndex, prevMonthYear, myNumbers, months) {
@@ -172,11 +172,11 @@ function getMonthlyComparisonData(ss, currentMonthIndex, currentYear, prevMonthI
     let projectionMultiplier = 1;
     let projectionLabel = 'actual (past mid-month)';
     if (currentDay <= oneThird) {
-        projectionMultiplier = 3;
-        projectionLabel = '3× estimate (first 1/3 of month)';
-    } else if (currentDay <= oneHalf) {
         projectionMultiplier = 2;
-        projectionLabel = '2× estimate (first 1/2 of month)';
+        projectionLabel = '2× estimate (first 1/3 of month)';
+    } else if (currentDay <= oneHalf) {
+        projectionMultiplier = 1.2;
+        projectionLabel = '1.2× estimate (between 1/3 and 1/2 of month)';
     }
 
     // Estimated current month spend used for comparisons

@@ -290,14 +290,16 @@ function edit() {
       splitRange1.setValue(formulaSp1);
       splitRange2.setValue(formulaSp2);
 
+      copyFormatting(row);
       validateType(row, col);
       validatePeriod(row, col);
-      copyFormatting(row);
+
 
       if (row < myNumbers.expenseLastRow) {
+        copyFormatting(row + 1);
         validateType(row + 1, col);
         validatePeriod(row + 1, col);
-        copyFormatting(row + 1);
+
       }
 
     }
@@ -321,22 +323,33 @@ function validateType(row, col) {
 
   if (col <= Math.max(myNumbers.expenseTypeColumn, myNumbers.expenseDescrColumn)) {
 
-    console.log(row + " " + myNumbers.expenseLastRow);
+    //console.log(row + " " + myNumbers.expenseLastRow);
 
     var range = sheet.getRange(row, myNumbers.expenseTypeColumn);
-    console.log(myNumbers.expenseTypeColumn + " " + col);
+    //console.log(myNumbers.expenseTypeColumn + " " + col);
     var summaryValues = summarySheet.getRange(myNumbers.expenseFirstRow, myNumbers.expenseTypeColumn, lastFilledRow - myNumbers.expenseFirstRow + 1, 1).getValues().flat();
-    console.log("drop down list: " + myNumbers.expenseFirstRow + " " + myNumbers.expenseTypeColumn + " " + lastFilledRow - myNumbers.expenseFirstRow + " " + 1);
+    console.log(lastFilledRow);
+    console.log("drop down list: " + myNumbers.expenseFirstRow + " " + myNumbers.expenseTypeColumn + " " + (lastFilledRow - myNumbers.expenseFirstRow) + " " + 1);
+    console.log("Summary values: " + summaryValues);
 
-    if (firstEmptyIndex !== -1) {
+    /*if (firstEmptyIndex !== -1) {
       summaryValues = summaryValues.slice(0, firstEmptyIndex);
     }
+    */
+
     var uniqueSummaryTypeValues = Array.from(new Set(summaryValues));
-    var uniqueMonthlyTypeValues = Array.from(new Set(sheet.getRange(myNumbers.expenseFirstRow, myNumbers.expenseTypeColumn, myNumbers.expenseLastRow - myNumbers.expenseFirstRow, myNumbers.expenseTypeColumn).getValues().flat()));
+    var uniqueMonthlyTypeValues = Array.from(new Set(sheet.getRange(myNumbers.expenseFirstRow, myNumbers.expenseTypeColumn, myNumbers.expenseLastRow - myNumbers.expenseFirstRow, 1).getValues().flat()));
+    console.log("Monthly values: " + uniqueMonthlyTypeValues);
+
 
     var uniqueTypeValues = uniqueSummaryTypeValues.concat(uniqueMonthlyTypeValues);
 
+    console.log("Combined values: " + uniqueTypeValues);
+
     //var uniqueTypeValues = uniqueSummaryTypeValues.concat(uniqueMonthlyTypeValues.filter(value => !uniqueSummaryTypeValues.includes(value)));
+
+    range.clearDataValidations();
+
     var validationRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(uniqueTypeValues)
       .build();
