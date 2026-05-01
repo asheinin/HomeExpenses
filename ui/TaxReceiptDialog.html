@@ -55,8 +55,13 @@
       margin-bottom: 6px;
     }
 
-    input[type="month"] {
-      width: 100%;
+    .date-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    select {
+      flex: 1;
       padding: 10px 12px;
       font-size: 14px;
       border: 1px solid #ddd;
@@ -64,9 +69,10 @@
       box-sizing: border-box;
       font-family: inherit;
       transition: border-color 0.2s, box-shadow 0.2s;
+      background-color: white;
     }
 
-    input:focus {
+    select:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -136,13 +142,45 @@
 
     <form id="taxReceiptForm">
       <div class="form-group">
-        <label for="fromDate">From Month</label>
-        <input type="month" id="fromDate" required>
+        <label>From Month</label>
+        <div class="date-row">
+          <select id="fromMonth" required>
+            <option value="01">January</option>
+            <option value="02">February</option>
+            <option value="03">March</option>
+            <option value="04">April</option>
+            <option value="05">May</option>
+            <option value="06">June</option>
+            <option value="07">July</option>
+            <option value="08">August</option>
+            <option value="09">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+          <select id="fromYear" required></select>
+        </div>
       </div>
 
       <div class="form-group">
-        <label for="toDate">To Month</label>
-        <input type="month" id="toDate" required>
+        <label>To Month</label>
+        <div class="date-row">
+          <select id="toMonth" required>
+            <option value="01">January</option>
+            <option value="02">February</option>
+            <option value="03">March</option>
+            <option value="04">April</option>
+            <option value="05">May</option>
+            <option value="06">June</option>
+            <option value="07">July</option>
+            <option value="08">August</option>
+            <option value="09">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+          <select id="toYear" required></select>
+        </div>
       </div>
 
       <div class="actions">
@@ -153,85 +191,111 @@
   </div>
 
   <script>
+    const availableYears = <?= availableYears ?>;
+    
     document.addEventListener("DOMContentLoaded", function() {
-      // Set default dates to Jan and Dec of the current year
-      const now = new Date();
-      const currentYear = now.getFullYear();
+      const fromYearSelect = document.getElementById('fromYear');
+      const toYearSelect = document.getElementById('toYear');
       
-      // format to YYYY-MM
-      const firstMonth = `${currentYear}-01`;
-      const lastMonth = `${currentYear}-12`;
-      
-      const fromDateInput = document.getElementById('fromDate');
-      const toDateInput = document.getElementById('toDate');
+      // Populate Year Dropdowns
+      availableYears.forEach(year => {
+        let opt1 = document.createElement('option');
+        opt1.value = year;
+        opt1.textContent = year;
+        fromYearSelect.appendChild(opt1);
+        
+        let opt2 = document.createElement('option');
+        opt2.value = year;
+        opt2.textContent = year;
+        toYearSelect.appendChild(opt2);
+      });
 
-      fromDateInput.value = firstMonth;
-      toDateInput.value = lastMonth;
+      // Set default dates to Jan and Dec of the active year
+      const currentYear = new Date().getFullYear();
+      let defaultYear = availableYears.includes(currentYear) ? currentYear : availableYears[availableYears.length - 1];
+      
+      document.getElementById('fromMonth').value = '01';
+      fromYearSelect.value = defaultYear;
+      
+      document.getElementById('toMonth').value = '12';
+      toYearSelect.value = defaultYear;
 
       // Clear errors on input change
-      fromDateInput.addEventListener('input', clearErrors);
-      toDateInput.addEventListener('input', clearErrors);
-
-      // Auto-populate To Date when From Date changes
-      fromDateInput.addEventListener('change', function() {
-        if (this.value) {
-          const fromDateObj = new Date(this.value + "-01T00:00:00");
-          if (!isNaN(fromDateObj.getTime())) {
-            // Add 11 months to get the end of the 12-month period
-            const toDateObj = new Date(fromDateObj);
-            toDateObj.setMonth(toDateObj.getMonth() + 11);
-            
-            const yyyy = toDateObj.getFullYear();
-            const mm = String(toDateObj.getMonth() + 1).padStart(2, '0');
-            
-            toDateInput.value = `${yyyy}-${mm}`;
+      document.getElementById('fromMonth').addEventListener('change', handleFromChange);
+      fromYearSelect.addEventListener('change', handleFromChange);
+      document.getElementById('toMonth').addEventListener('change', clearErrors);
+      toYearSelect.addEventListener('change', clearErrors);
+    });
+    
+    function handleFromChange() {
+      clearErrors();
+      
+      const fm = document.getElementById('fromMonth').value;
+      const fy = document.getElementById('fromYear').value;
+      
+      if (fm && fy) {
+        const fromDateObj = new Date(`${fy}-${fm}-01T00:00:00`);
+        if (!isNaN(fromDateObj.getTime())) {
+          // Add 11 months to get the end of the 12-month period
+          const toDateObj = new Date(fromDateObj);
+          toDateObj.setMonth(toDateObj.getMonth() + 11);
+          
+          const yyyy = toDateObj.getFullYear();
+          const mm = String(toDateObj.getMonth() + 1).padStart(2, '0');
+          
+          document.getElementById('toMonth').value = mm;
+          
+          // Only update To Year if it exists in the dropdown
+          const toYearSelect = document.getElementById('toYear');
+          if (Array.from(toYearSelect.options).some(opt => opt.value == yyyy)) {
+             toYearSelect.value = yyyy;
           }
         }
-      });
-    });
+      }
+    }
 
     function submitForm() {
       const btn = document.getElementById('submit-btn');
       
-      var fromMonthStr = document.getElementById('fromDate').value;
-      var toMonthStr = document.getElementById('toDate').value;
+      const fm = document.getElementById('fromMonth').value;
+      const fy = document.getElementById('fromYear').value;
+      const tm = document.getElementById('toMonth').value;
+      const ty = document.getElementById('toYear').value;
+      
+      const fromMonthStr = `${fy}-${fm}`;
+      const toMonthStr = `${ty}-${tm}`;
 
       clearErrors();
-
       var errors = [];
-      if (!fromMonthStr) {
-        errors.push('From Month is required');
-        document.getElementById('fromDate').classList.add('input-error');
-      }
-      if (!toMonthStr) {
-        errors.push('To Month is required');
-        document.getElementById('toDate').classList.add('input-error');
-      }
 
-      if (fromMonthStr && toMonthStr) {
-        const fromDate = new Date(fromMonthStr + "-01T00:00:00");
-        const toDate = new Date(toMonthStr + "-01T00:00:00");
+      const fromDate = new Date(fromMonthStr + "-01T00:00:00");
+      const toDate = new Date(toMonthStr + "-01T00:00:00");
 
-        if (fromDate > toDate) {
-           errors.push('From Month must be before To Month');
-           document.getElementById('fromDate').classList.add('input-error');
-           document.getElementById('toDate').classList.add('input-error');
-        } else {
-           const monthsDiff = (toDate.getFullYear() - fromDate.getFullYear()) * 12 + (toDate.getMonth() - fromDate.getMonth());
-           
-           if (monthsDiff > 11) {
-             errors.push('Date range cannot exceed 12 consecutive months.');
-             document.getElementById('fromDate').classList.add('input-error');
-             document.getElementById('toDate').classList.add('input-error');
-           }
+      if (fromDate > toDate) {
+         errors.push('From Month must be before To Month');
+         document.getElementById('fromMonth').classList.add('input-error');
+         document.getElementById('fromYear').classList.add('input-error');
+         document.getElementById('toMonth').classList.add('input-error');
+         document.getElementById('toYear').classList.add('input-error');
+      } else {
+         const monthsDiff = (toDate.getFullYear() - fromDate.getFullYear()) * 12 + (toDate.getMonth() - fromDate.getMonth());
+         
+         if (monthsDiff > 11) {
+           errors.push('Date range cannot exceed 12 consecutive months.');
+           document.getElementById('fromMonth').classList.add('input-error');
+           document.getElementById('fromYear').classList.add('input-error');
+           document.getElementById('toMonth').classList.add('input-error');
+           document.getElementById('toYear').classList.add('input-error');
+         }
 
-           const yearDiff = toDate.getFullYear() - fromDate.getFullYear();
-           if (yearDiff > 1) {
-             errors.push('Date range cannot span more than 2 calendar years.');
-             document.getElementById('fromDate').classList.add('input-error');
-             document.getElementById('toDate').classList.add('input-error');
-           }
-        }
+         const yearDiff = toDate.getFullYear() - fromDate.getFullYear();
+         if (yearDiff > 1) {
+           errors.push('Date range cannot span more than 2 calendar years.');
+           document.getElementById('fromMonth').classList.add('input-error');
+           document.getElementById('fromYear').classList.add('input-error');
+           document.getElementById('toMonth').classList.add('input-error');
+           document.getElementById('toYear').classList.add('input-error');
+         }
       }
 
       if (errors.length > 0) {
@@ -260,8 +324,10 @@
 
     function clearErrors() {
       document.getElementById('errorMessage').style.display = 'none';
-      document.getElementById('fromDate').classList.remove('input-error');
-      document.getElementById('toDate').classList.remove('input-error');
+      document.getElementById('fromMonth').classList.remove('input-error');
+      document.getElementById('fromYear').classList.remove('input-error');
+      document.getElementById('toMonth').classList.remove('input-error');
+      document.getElementById('toYear').classList.remove('input-error');
     }
   </script>
 </body>

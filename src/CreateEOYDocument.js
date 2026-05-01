@@ -1,8 +1,30 @@
 function createEOYDocument() {
-  var htmlDlg = HtmlService.createHtmlOutputFromFile('ui/TaxReceiptDialog')
+  var template = HtmlService.createTemplateFromFile('ui/TaxReceiptDialog');
+  
+  var availableYears = [];
+  var files = DriveApp.searchFiles('title contains "Home payments" and mimeType = "' + MimeType.GOOGLE_SHEETS + '"');
+  while (files.hasNext()) {
+    var file = files.next();
+    var match = file.getName().match(/Home payments\s*(\d{4})/i);
+    if (match) {
+      availableYears.push(parseInt(match[1]));
+    }
+  }
+  
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var activeYearMatch = ss.getName().match(/Home payments\s*(\d{4})/i);
+  var activeYear = activeYearMatch ? parseInt(activeYearMatch[1]) : new Date().getFullYear();
+  if (availableYears.indexOf(activeYear) === -1) {
+    availableYears.push(activeYear);
+  }
+  
+  availableYears.sort(function(a, b){return a-b});
+  template.availableYears = JSON.stringify(availableYears);
+
+  var htmlDlg = template.evaluate()
     .setSandboxMode(HtmlService.SandboxMode.IFRAME)
-    .setWidth(400)
-    .setHeight(300);
+    .setWidth(450)
+    .setHeight(350);
   SpreadsheetApp.getUi()
     .showModalDialog(htmlDlg, 'Tax Receipt Dates');
 }
@@ -64,6 +86,9 @@ function processEOYDocument(startMonthStr, endMonthStr) {
     targetSheets.forEach(ts => {
       let sheetSS = spreadsheetsByYear[ts.year];
       const sheetName = `${ts.monthStr} ${ts.year}`;
+      
+      console.log(`Processing month: ${sheetName} from file: ${sheetSS.getName()}`);
+      
       const sheet = sheetSS.getSheetByName(sheetName);
       if (!sheet) return;
 
@@ -164,7 +189,7 @@ function processEOYDocument(startMonthStr, endMonthStr) {
 
   }
   catch (err) {
-    Logger.log(err);
+    console.error(err);
     ss.toast("Error generating document: " + err, "Error", 5);
   }
 }
