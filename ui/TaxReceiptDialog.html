@@ -55,7 +55,7 @@
       margin-bottom: 6px;
     }
 
-    input[type="date"] {
+    input[type="month"] {
       width: 100%;
       padding: 10px 12px;
       font-size: 14px;
@@ -136,13 +136,13 @@
 
     <form id="taxReceiptForm">
       <div class="form-group">
-        <label for="fromDate">From Date</label>
-        <input type="date" id="fromDate" required>
+        <label for="fromDate">From Month</label>
+        <input type="month" id="fromDate" required>
       </div>
 
       <div class="form-group">
-        <label for="toDate">To Date</label>
-        <input type="date" id="toDate" required>
+        <label for="toDate">To Month</label>
+        <input type="month" id="toDate" required>
       </div>
 
       <div class="actions">
@@ -154,19 +154,19 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", function() {
-      // Set default dates to Jan 1st and Dec 31st of the current year
+      // Set default dates to Jan and Dec of the current year
       const now = new Date();
       const currentYear = now.getFullYear();
       
-      // format to YYYY-MM-DD
-      const firstDay = `${currentYear}-01-01`;
-      const lastDay = `${currentYear}-12-31`;
+      // format to YYYY-MM
+      const firstMonth = `${currentYear}-01`;
+      const lastMonth = `${currentYear}-12`;
       
       const fromDateInput = document.getElementById('fromDate');
       const toDateInput = document.getElementById('toDate');
 
-      fromDateInput.value = firstDay;
-      toDateInput.value = lastDay;
+      fromDateInput.value = firstMonth;
+      toDateInput.value = lastMonth;
 
       // Clear errors on input change
       fromDateInput.addEventListener('input', clearErrors);
@@ -175,18 +175,16 @@
       // Auto-populate To Date when From Date changes
       fromDateInput.addEventListener('change', function() {
         if (this.value) {
-          const fromDateObj = new Date(this.value + "T00:00:00");
+          const fromDateObj = new Date(this.value + "-01T00:00:00");
           if (!isNaN(fromDateObj.getTime())) {
-            // Calculate last date of 12 month period (add 1 year, subtract 1 day)
+            // Add 11 months to get the end of the 12-month period
             const toDateObj = new Date(fromDateObj);
-            toDateObj.setFullYear(toDateObj.getFullYear() + 1);
-            toDateObj.setDate(toDateObj.getDate() - 1);
+            toDateObj.setMonth(toDateObj.getMonth() + 11);
             
             const yyyy = toDateObj.getFullYear();
             const mm = String(toDateObj.getMonth() + 1).padStart(2, '0');
-            const dd = String(toDateObj.getDate()).padStart(2, '0');
             
-            toDateInput.value = `${yyyy}-${mm}-${dd}`;
+            toDateInput.value = `${yyyy}-${mm}`;
           }
         }
       });
@@ -195,35 +193,33 @@
     function submitForm() {
       const btn = document.getElementById('submit-btn');
       
-      var fromDateStr = document.getElementById('fromDate').value;
-      var toDateStr = document.getElementById('toDate').value;
+      var fromMonthStr = document.getElementById('fromDate').value;
+      var toMonthStr = document.getElementById('toDate').value;
 
       clearErrors();
 
       var errors = [];
-      if (!fromDateStr) {
-        errors.push('From Date is required');
+      if (!fromMonthStr) {
+        errors.push('From Month is required');
         document.getElementById('fromDate').classList.add('input-error');
       }
-      if (!toDateStr) {
-        errors.push('To Date is required');
+      if (!toMonthStr) {
+        errors.push('To Month is required');
         document.getElementById('toDate').classList.add('input-error');
       }
 
-      if (fromDateStr && toDateStr) {
-        const fromDate = new Date(fromDateStr + "T00:00:00");
-        const toDate = new Date(toDateStr + "T00:00:00");
+      if (fromMonthStr && toMonthStr) {
+        const fromDate = new Date(fromMonthStr + "-01T00:00:00");
+        const toDate = new Date(toMonthStr + "-01T00:00:00");
 
         if (fromDate > toDate) {
-           errors.push('From Date must be before To Date');
+           errors.push('From Month must be before To Month');
            document.getElementById('fromDate').classList.add('input-error');
            document.getElementById('toDate').classList.add('input-error');
         } else {
            const monthsDiff = (toDate.getFullYear() - fromDate.getFullYear()) * 12 + (toDate.getMonth() - fromDate.getMonth());
            
            if (monthsDiff > 11) {
-             // Example: Aug 2025 (month 7) to Aug 2026 (month 7) is exactly 12 months diff => 13 months duration.
-             // Aug 2025 to July 2026 is 11 months diff => 12 months duration.
              errors.push('Date range cannot exceed 12 consecutive months.');
              document.getElementById('fromDate').classList.add('input-error');
              document.getElementById('toDate').classList.add('input-error');
@@ -255,7 +251,7 @@
           btn.disabled = false;
           btn.textContent = 'Generate Receipt';
         })
-        .processEOYDocument(fromDateStr, toDateStr);
+        .processEOYDocument(fromMonthStr, toMonthStr);
     }
 
     function closeDialog() {

@@ -7,7 +7,7 @@ function createEOYDocument() {
     .showModalDialog(htmlDlg, 'Tax Receipt Dates');
 }
 
-function processEOYDocument(startDateStr, endDateStr) {
+function processEOYDocument(startMonthStr, endMonthStr) {
   var myNumbers = new staticNumbers();
   var myUtils = new myUtil();
 
@@ -24,8 +24,13 @@ function processEOYDocument(startDateStr, endDateStr) {
     var activeYear = parseInt(fileName.split(" ").slice(-1).pop()) || currentTime.getFullYear();
     
     // Parse dates
-    var startDate = new Date(startDateStr + "T00:00:00");
-    var endDate = new Date(endDateStr + "T00:00:00");
+    var startDate = new Date(startMonthStr + "-01T00:00:00");
+    var endDate = new Date(endMonthStr + "-01T00:00:00");
+    
+    // Calculate display period
+    var displayStartDate = Utilities.formatDate(startDate, "GMT", "MMMM 1, yyyy");
+    var endDateObj = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0); // Last day of month
+    var displayEndDate = Utilities.formatDate(endDateObj, "GMT", "MMMM d, yyyy");
     
     // Create list of target months
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -36,21 +41,28 @@ function processEOYDocument(startDateStr, endDateStr) {
       d.setMonth(d.getMonth() + 1);
     }
     
-    // Check if we need to open a previous year spreadsheet
-    let prevSS = null;
+    // Check if required spreadsheets exist
     const yearsNeeded = Array.from(new Set(targetSheets.map(ts => ts.year)));
-    if (yearsNeeded.some(y => y !== activeYear)) {
-      const prevYear = yearsNeeded.find(y => y !== activeYear);
-      const files = DriveApp.searchFiles('title = "Home payments ' + prevYear + '" and mimeType = "' + MimeType.GOOGLE_SHEETS + '"');
-      if (files.hasNext()) {
-        prevSS = SpreadsheetApp.open(files.next());
+    const spreadsheetsByYear = {};
+    
+    for (let i = 0; i < yearsNeeded.length; i++) {
+      let year = yearsNeeded[i];
+      if (year === activeYear) {
+        spreadsheetsByYear[year] = ss;
+      } else {
+        const files = DriveApp.searchFiles('title = "Home payments ' + year + '" and mimeType = "' + MimeType.GOOGLE_SHEETS + '"');
+        if (files.hasNext()) {
+          spreadsheetsByYear[year] = SpreadsheetApp.open(files.next());
+        } else {
+          throw new Error("Spreadsheet for year " + year + " ('Home payments " + year + "') does not exist. Please adjust the dates.");
+        }
       }
     }
     
     // Aggregate Data
     const data = {};
     targetSheets.forEach(ts => {
-      let sheetSS = (ts.year === activeYear) ? ss : (prevSS || ss);
+      let sheetSS = spreadsheetsByYear[ts.year];
       const sheetName = `${ts.monthStr} ${ts.year}`;
       const sheet = sheetSS.getSheetByName(sheetName);
       if (!sheet) return;
@@ -136,7 +148,7 @@ function processEOYDocument(startDateStr, endDateStr) {
       .setHeading(DocumentApp.ParagraphHeading.HEADING2);
     body.insertParagraph(2, 'Print Date: ' + currentTime.getDate() + "/" + (currentTime.getMonth()+1) + "/" + currentTime.getFullYear())
       .setHeading(DocumentApp.ParagraphHeading.HEADING3);
-    body.insertParagraph(3, 'Period: ' + startDateStr + ' to ' + endDateStr)
+    body.insertParagraph(3, 'Period: ' + displayStartDate + ' to ' + displayEndDate)
       .setHeading(DocumentApp.ParagraphHeading.HEADING3);
       
     var table = body.appendTable(rowsData);
