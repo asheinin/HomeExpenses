@@ -144,7 +144,8 @@ function processEOYDocument(startMonthStr, endMonthStr) {
       rowsData[i][2] = isNaN(parseFloat(rowsData[i][2])) ? "" : "$" + rowsData[i][2].toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
     }
 
-    var newFileName = name + " Tax Receipt " + formattedDate;
+    var formattedTime = Utilities.formatDate(currentTime, "GMT", "HHmmss");
+    var newFileName = name + " Tax Receipt " + formattedDate + " " + formattedTime;
 
     // Call existing summary processes for analytics
     summaryExpenses();
