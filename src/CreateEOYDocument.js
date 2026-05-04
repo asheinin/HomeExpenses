@@ -1,110 +1,190 @@
 function createEOYDocument() {
+  var template = HtmlService.createTemplateFromFile('ui/TaxReceiptDialog');
+  
+  var availableYears = [];
+  var files = DriveApp.searchFiles('title contains "Home payments" and mimeType = "' + MimeType.GOOGLE_SHEETS + '"');
+  while (files.hasNext()) {
+    var file = files.next();
+    var match = file.getName().match(/Home payments\s*(\d{4})/i);
+    if (match) {
+      availableYears.push(parseInt(match[1]));
+    }
+  }
+  
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var activeYearMatch = ss.getName().match(/Home payments\s*(\d{4})/i);
+  var activeYear = activeYearMatch ? parseInt(activeYearMatch[1]) : new Date().getFullYear();
+  if (availableYears.indexOf(activeYear) === -1) {
+    availableYears.push(activeYear);
+  }
+  
+  availableYears.sort(function(a, b){return a-b});
+  template.availableYears = availableYears;
 
+  var htmlDlg = template.evaluate()
+    .setSandboxMode(HtmlService.SandboxMode.IFRAME)
+    .setWidth(450)
+    .setHeight(350);
+  SpreadsheetApp.getUi()
+    .showModalDialog(htmlDlg, 'Tax Receipt Dates');
+}
+
+function processEOYDocument(startMonthStr, endMonthStr) {
   var myNumbers = new staticNumbers();
   var myUtils = new myUtil();
 
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var name = ss.getName();
-  var sheet = ss.getSheets()[0];
-  var summarySheet = ss.getSheetByName("Summary")
-
+  var dashSheet = ss.getSheets()[0];
   var editors = ss.getEditors();
 
-  Logger.log(editors);
-
   try {
-
-
     var currentTime = new Date();
-    var month = currentTime.getMonth() + 1;
-    var day = currentTime.getDate();
-    var currYear = currentTime.getFullYear();
-
-    var fileName = ss.getName();
-
-    var fileYear = fileName.split(" ").slice(-1).pop();
-
-    Logger.log(currYear + " " + " " + fileYear);
-
-    //Check if this is current year file
-
-    if (currYear > fileYear) month = 11;
-
     var formattedDate = Utilities.formatDate(currentTime, "GMT", "MMMM-dd-yyyy");
+    
+    var fileName = ss.getName();
+    var activeYear = parseInt(fileName.split(" ").slice(-1).pop()) || currentTime.getFullYear();
+    
+    // Parse dates
+    var startDate = new Date(startMonthStr + "-01T00:00:00");
+    var endDate = new Date(endMonthStr + "-01T00:00:00");
+    
+    // Calculate display period
+    var displayStartDate = Utilities.formatDate(startDate, "GMT", "MMMM 1, yyyy");
+    var endDateObj = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0); // Last day of month
+    var displayEndDate = Utilities.formatDate(endDateObj, "GMT", "MMMM d, yyyy");
+    
+    // Create list of target months
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const targetSheets = [];
+    let d = new Date(startDate.getTime());
+    while (d <= endDate) {
+      targetSheets.push({ monthStr: months[d.getMonth()], year: d.getFullYear() });
+      d.setMonth(d.getMonth() + 1);
+    }
+    
+    // Check if required spreadsheets exist
+    const yearsNeeded = Array.from(new Set(targetSheets.map(ts => ts.year)));
+    const spreadsheetsByYear = {};
+    
+    for (let i = 0; i < yearsNeeded.length; i++) {
+      let year = yearsNeeded[i];
+      if (year === activeYear) {
+        spreadsheetsByYear[year] = ss;
+      } else {
+        const files = DriveApp.searchFiles('title = "Home payments ' + year + '" and mimeType = "' + MimeType.GOOGLE_SHEETS + '"');
+        if (files.hasNext()) {
+          spreadsheetsByYear[year] = SpreadsheetApp.open(files.next());
+        } else {
+          throw new Error("Spreadsheet for year " + year + " ('Home payments " + year + "') does not exist. Please adjust the dates.");
+        }
+      }
+    }
+    
+    // Aggregate Data
+    const data = {};
+    targetSheets.forEach(ts => {
+      let sheetSS = spreadsheetsByYear[ts.year];
+      const sheetName = `${ts.monthStr} ${ts.year}`;
+      
+      console.log(`Processing month: ${sheetName} from file: ${sheetSS.getName()}`);
+      
+      const sheet = sheetSS.getSheetByName(sheetName);
+      if (!sheet) return;
 
-    var newFileName = name + " Tax Receipt " + formattedDate;
+      const range = sheet.getRange('A2:D50');
+      const values = range.getValues();
 
-    //check if file already exists
+      values.forEach(row => {
+        const type = row[myNumbers.expenseTypeColumn - 1];
+        const description = row[myNumbers.expenseDescrColumn - 1];
+        let amount = row[myNumbers.expenseAmountColumn - 1];
 
-    //if (DriveApp.getFilesByName(newFileName).hasNext() === true) throw "FileAlreadyExists";  
+        if (!type || !amount) return;
 
-    //copy sourceSheet from one spreadsheet to another
+        // Ensure amount is a float
+        amount = parseFloat(amount) || 0;
 
-    //var copyDoc = myUtils.saveFile(newFileName); 
-    //if (copyDoc == -1) throw "CopyFailed";
+        if (!data[type]) {
+          data[type] = {
+            descriptions: new Set(),
+            totalAmount: 0
+          };
+        }
 
-    if ((month != 11) || (month != 1)) {
-
-      var response = myUtils.dialogYN('You may not have all expenses for ' + fileYear + ' yet. Continue?');
-
-      if (response != 'YES') return;
-
+        if (description) {
+          data[type].descriptions.add(description);
+        }
+        data[type].totalAmount += amount;
+        
+        if (type.toString().trim().toLowerCase() === "eat out") {
+          console.log(`Eat Out found in ${sheetName}: amount=${amount}, running total=${data[type].totalAmount}`);
+        }
+      });
+    });
+    
+    // Build Rows Data
+    const header = ['Type', 'Description', 'Total Amount'];
+    const rowsData = [header];
+    let grandTotal = 0;
+    
+    Object.keys(data).forEach(type => {
+        const row = [
+            type,
+            Array.from(data[type].descriptions).join(', '),
+            data[type].totalAmount
+        ];
+        rowsData.push(row);
+        grandTotal += data[type].totalAmount;
+    });
+    rowsData.push(['Total', '', grandTotal]);
+    
+    // Format currency
+    for (var i = 1; i < rowsData.length; i++) {
+      rowsData[i][2] = isNaN(parseFloat(rowsData[i][2])) ? "" : "$" + rowsData[i][2].toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
     }
 
+    var formattedTime = Utilities.formatDate(currentTime, "GMT", "HHmmss");
+    var newFileName = name + " Tax Receipt " + formattedDate + " " + formattedTime;
+
+    // Call existing summary processes for analytics
     summaryExpenses();
 
     var doc = DocumentApp.create(newFileName);
     var docURL = doc.getUrl();
 
     var files = DriveApp.getFilesByName(newFileName);
+    var file;
     while (files.hasNext()) {
-      var file = files.next();
+      file = files.next();
     }
 
-    file.addEditors(editors);
-
-    Logger.log(editors);
+    if (editors && editors.length > 0) {
+      file.addEditors(editors);
+    }
 
     var currentFile = DriveApp.getFileById(ss.getId());
     var parentFold = currentFile.getParents();
-    var folder = parentFold.next();
-    var theId = folder.getId();
-    var targetFolder = DriveApp.getFolderById(theId);
-    targetFolder.addFile(file);
-
-    Logger.log('targetFolder name: ' + targetFolder.getName());
-
-    /*
-    var currentDoc = DriveApp.getFileById(ss.getId());
-    var fileParents = currentDoc.getParents();
-    while ( fileParents.hasNext() ) {
-       var folder = fileParents.next();
-       Logger.log(folder.getName());
+    if (parentFold.hasNext()) {
+      var folder = parentFold.next();
+      var theId = folder.getId();
+      var targetFolder = DriveApp.getFolderById(theId);
+      targetFolder.addFile(file);
     }
-    */
 
     var body = doc.getBody();
-    var address = sheet.getRange(myNumbers.dashAddressRow, myNumbers.dashAddressColumn).getValue();
-    var rowsData = summarySheet.getRange(1, 1, summarySheet.getLastRow(), 3).getValues();
-    Logger.log(rowsData);
-
-    for (var i = 1; i < summarySheet.getLastRow(); i++) {
-      rowsData[i][2] = isNaN(parseFloat(rowsData[i][2])) ? "" : "$" + rowsData[i][2].toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
-      /*
-      if (rowsData[i][1] == "") {
-        rowsData.splice(i, 1);
-        i++
-      } 
-      */
-    }
+    var address = dashSheet.getRange(myNumbers.dashAddressRow, myNumbers.dashAddressColumn).getValue();
 
     body.insertParagraph(0, name + " Tax Receipt ")
       .setHeading(DocumentApp.ParagraphHeading.HEADING1);
     body.insertParagraph(1, 'Address: ' + address)
       .setHeading(DocumentApp.ParagraphHeading.HEADING2);
-    body.insertParagraph(2, 'Print Date: ' + day + "/" + month + "/" + currYear)
+    body.insertParagraph(2, 'Print Date: ' + currentTime.getDate() + "/" + (currentTime.getMonth()+1) + "/" + currentTime.getFullYear())
       .setHeading(DocumentApp.ParagraphHeading.HEADING3);
-    table = body.appendTable(rowsData);
+    body.insertParagraph(3, 'Period: ' + displayStartDate + ' to ' + displayEndDate)
+      .setHeading(DocumentApp.ParagraphHeading.HEADING3);
+      
+    var table = body.appendTable(rowsData);
     table.getRow(0).editAsText().setBold(true);
 
     notifyNewFile(newFileName, docURL);
@@ -115,21 +195,10 @@ function createEOYDocument() {
     // Generate the year-over-year comparison report
     runYearComparison();
 
-
   }
   catch (err) {
-    if (err == "CopyFailed") {
-      ss.toast("No file created", "Error", 5);
-      return (-1);
-    }
-    if (err == "FileAlreadyExists") {
-      ss.toast("Next Year File Already Exists", "Error", 5);
-      return (-2);
-    } else {
-      Logger.log(err);
-    }
+    console.error(err);
+    ss.toast("Error generating document: " + err, "Error", 5);
   }
-
-  return;
-
 }
+
