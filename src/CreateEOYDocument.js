@@ -92,7 +92,7 @@ function processEOYDocument(startMonthStr, endMonthStr) {
       const sheet = sheetSS.getSheetByName(sheetName);
       if (!sheet) return;
 
-      const range = sheet.getRange('A2:D50');
+      const range = sheet.getRange(myNumbers.expenseCarryOverRow, myNumbers.expenseTypeColumn, myNumbers.expenseLastRow - myNumbers.expenseCarryOverRow + 1, myNumbers.expenseAmountColumn);
       const values = range.getValues();
 
       values.forEach(row => {

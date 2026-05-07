@@ -40,7 +40,7 @@ function cleanMonths(tab,ss) {
       targetSheet.getRange(myNumbers.expenseFirstRow, 1, numOfRows, 4).clearContent();
       // Clear definition block 2 (Cols 7-12: SplitYN, Pay1, Pay2, Period, Paid, PAP)
       // Note: Columns 5, 6, 13, 14 contain formulas and are preserved.
-      targetSheet.getRange(myNumbers.expenseFirstRow, 7, numOfRows, 6).clearContent();
+      targetSheet.getRange(myNumbers.expenseFirstRow, myNumbers.expenceSplitColumn, numOfRows, myNumbers.expensePAPColumn - myNumbers.expenceSplitColumn + 1).clearContent();
 
       // Reset background to white for the Amount column (Col 4)
       targetSheet.getRange(myNumbers.expenseFirstRow, myNumbers.expenseAmountColumn, numOfRows, 1).setBackground("white");
