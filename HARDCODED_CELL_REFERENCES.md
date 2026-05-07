@@ -40,16 +40,12 @@ Constants reference (from [src/static/main.js](src/static/main.js)):
 
 ## Violations
 
-### A1-notation literals (`'A2:D50'`)
+### A1-notation literals (`'A2:D50'`) — **FIXED**
 
-These are the most flagrant — exact matches of the example the user gave.
-
-| File | Line | Code | Suggested replacement |
-|---|---|---|---|
-| [src/CreateEOYDocument.js:95](src/CreateEOYDocument.js#L95) | 95 | `const range = sheet.getRange('A2:D50');` | `sheet.getRange(myNumbers.expenseCarryOverRow, myNumbers.expenseTypeColumn, myNumbers.expenseLastRow - myNumbers.expenseCarryOverRow + 1, myNumbers.expenseAmountColumn)` |
-| [src/SummaryExpenses.js:55](src/SummaryExpenses.js#L55) | 55 | `const range = sheet.getRange('A2:D50');` | same as above |
-
-> Note: `A2` starts at row 2 = `expenseCarryOverRow` / `expenseSpToSpRow` (allowed `2` exception, but a constant exists). `D50` ends at column 4 = `expenseAmountColumn`, row 50 = `expenseLastRow`.
+| File | Line | Status |
+|---|---|---|
+| [src/CreateEOYDocument.js:95](src/CreateEOYDocument.js#L95) | 95 | Fixed — now `sheet.getRange(myNumbers.expenseCarryOverRow, myNumbers.expenseTypeColumn, myNumbers.expenseLastRow - myNumbers.expenseCarryOverRow + 1, myNumbers.expenseAmountColumn)` |
+| [src/SummaryExpenses.js:55](src/SummaryExpenses.js#L55) | 55 | Fixed — same replacement |
 
 ---
 
@@ -84,14 +80,14 @@ These are the most flagrant — exact matches of the example the user gave.
 
 ---
 
-### Hardcoded column `7` where `expenceSplitColumn` should be used (and `6` for span)
+### Hardcoded column `7` where `expenceSplitColumn` should be used (and `6` for span) — **FIXED**
 
 The span `6` corresponds to `expensePAPColumn (12) - expenceSplitColumn (7) + 1`.
 
-| File | Line | Code |
+| File | Line | Status |
 |---|---|---|
-| [src/CleanMonths.js:43](src/CleanMonths.js#L43) | 43 | `targetSheet.getRange(myNumbers.expenseFirstRow, 7, numOfRows, 6).clearContent();` |
-| [src/CreateNewFile.js:74](src/CreateNewFile.js#L74) | 74 | `targetSheet.getRange(myNumbers.expenseFirstRow, 7, numOfRows, 6).clearContent();` |
+| [src/CleanMonths.js:43](src/CleanMonths.js#L43) | 43 | Fixed — now `getRange(myNumbers.expenseFirstRow, myNumbers.expenceSplitColumn, numOfRows, myNumbers.expensePAPColumn - myNumbers.expenceSplitColumn + 1)` |
+| [src/CreateNewFile.js:74](src/CreateNewFile.js#L74) | 74 | Fixed — same replacement |
 
 ---
 
