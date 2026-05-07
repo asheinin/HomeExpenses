@@ -33,6 +33,7 @@ Constants reference (from [src/static/main.js](src/static/main.js)):
 | `summaryAmountColumn` | 3 |
 | `summaryAnalyticsYearColumn` | 1 |
 | `summaryAnalyticsDataStartColumn` | 4 |
+| `summaryAnalyticsTotalColumns` | 25 |
 | `dashColumns` | 13 |
 | `dashMonthNameColumn` | 1 |
 
@@ -99,16 +100,16 @@ The span `6` corresponds to `expensePAPColumn (12) - expenceSplitColumn (7) + 1`
 
 ---
 
-### Hardcoded column-span `25` with no constant
+### Hardcoded column-span `25` with no constant — **FIXED**
 
-`Analytics.js` reads/clears 25 columns of the Summary sheet but no `staticNumbers` field describes that width. Either define one (e.g. `summaryAnalyticsTotalColumns`) or compute from `summaryAnalyticsDataStartColumn` + a tier count.
+Added `summaryAnalyticsTotalColumns = 25` to `staticNumbers` in [src/static/main.js](src/static/main.js).
 
-| File | Line | Code |
+| File | Line | Status |
 |---|---|---|
-| [src/Analytics.js:126](src/Analytics.js#L126) | 126 | `summarySheet.getRange(1, 1, Math.max(lastRowOfData, 1), 25).getValues();` (also col `1` → `summaryAnalyticsYearColumn`; row `1` is allowed exception) |
-| [src/Analytics.js:135](src/Analytics.js#L135) | 135 | `summarySheet.getRange(startRow, 1, Math.max(lastRowOfData - startRow + 30, 1), 25).clearContent();` (col `1`) |
+| [src/Analytics.js:126](src/Analytics.js#L126) | 126 | Fixed — `25` → `myNumbers.summaryAnalyticsTotalColumns` (col `1` still hardcoded — separate category) |
+| [src/Analytics.js:135](src/Analytics.js#L135) | 135 | Fixed — same replacement (col `1` still hardcoded) |
 
-> The literal `16` on [src/Analytics.js:132](src/Analytics.js#L132) (`existingHeaders[i][16]`) is also a magic index into the same 25-column row.
+Also fixed: the literal `16` on [src/Analytics.js:132](src/Analytics.js#L132) (`existingHeaders[i][16]`) → `existingHeaders[i][myNumbers.summaryChartsStartColumn - 1]`.
 
 ---
 
@@ -143,14 +144,23 @@ These pass the row-`1` allowed exception, but the column is still a literal:
 
 ## Summary
 
-| Category | Count |
-|---|---|
-| A1 notation (`'A2:D50'`) | **2** |
-| Hardcoded col `1` | **15** |
-| Hardcoded col `2` | **2** |
-| Hardcoded col `7` (with span `6`) | **2** |
-| Hardcoded row beyond exception | **1** |
-| Hardcoded col-span `25` (no constant exists) | **2** |
-| **Total flagged** | **24** |
+| Category | Total | Fixed | Open |
+|---|---|---|---|
+| A1 notation (`'A2:D50'`) | 2 | **2** | 0 |
+| Hardcoded col `1` | 15 | 0 | **15** |
+| Hardcoded col `2` | 2 | 0 | **2** |
+| Hardcoded col `7` (with span `6`) | 2 | **2** | 0 |
+| Hardcoded row beyond exception | 1 | 0 | **1** |
+| Hardcoded col-span `25` (constant added) | 2 | **2** | 0 |
+| Magic array index `[16]` in Analytics.js | 1 | **1** | 0 |
+| **Totals** | **25** | **7** | **18** |
 
-The cleanest single fix is `Analytics.js` (define `summaryAnalyticsTotalColumns` in `staticNumbers`). The most repetitive fix is replacing `, 1,` with `, myNumbers.expenseTypeColumn,` in the seven `CopyMonth.js` / `CreateNewFile.js` / `CleanMonths.js` / `AddNewExpence.js` / `open.js` callsites that scan the expense block.
+### What's been fixed
+
+- A1 literals (`'A2:D50'`) in [src/CreateEOYDocument.js:95](src/CreateEOYDocument.js#L95) and [src/SummaryExpenses.js:55](src/SummaryExpenses.js#L55).
+- `7, numOfRows, 6` block in [src/CleanMonths.js:43](src/CleanMonths.js#L43) and [src/CreateNewFile.js:74](src/CreateNewFile.js#L74).
+- Added `summaryAnalyticsTotalColumns = 25` to [src/static/main.js](src/static/main.js); replaced `25` literals at [src/Analytics.js:126](src/Analytics.js#L126) and [src/Analytics.js:135](src/Analytics.js#L135), and the matching `[16]` index at [src/Analytics.js:132](src/Analytics.js#L132) (now `[myNumbers.summaryChartsStartColumn - 1]`).
+
+### What's still open
+
+The biggest remaining cleanup is the **15 col-`1` literals** — replacing `, 1,` with `, myNumbers.expenseTypeColumn,` (or `, myNumbers.dashMonthNameColumn,` in `GetMonthlyBalance.js`) in the `CopyMonth.js` / `CreateNewFile.js` / `CleanMonths.js` / `AddNewExpence.js` / `open.js` / `GetMonthlyBalance.js` callsites that scan the expense or dashboard block. After that, the **2 col-`2` literals** in `CleanMonths.js`/`CreateNewFile.js` (use `expenseInitialBalanceCol`) and the lone hardcoded-row-`3` block at [src/Analytics.js:317](src/Analytics.js#L317) close out the audit.
