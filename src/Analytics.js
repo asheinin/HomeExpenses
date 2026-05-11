@@ -123,16 +123,16 @@ function runAnalytics(e) {
 
     // Remove existing Historical section and charts to prevent duplication
     const lastRowOfData = summarySheet.getLastRow();
-    const existingHeaders = summarySheet.getRange(1, 1, Math.max(lastRowOfData, 1), 25).getValues();
+    const existingHeaders = summarySheet.getRange(1, 1, Math.max(lastRowOfData, 1), myNumbers.summaryAnalyticsTotalColumns).getValues();
 
     let startRow = new myUtil().getLastRowIncludingCharts(summarySheet) + 1;
 
     for (let i = 0; i < existingHeaders.length; i++) {
         const headerVal = existingHeaders[i][myNumbers.summaryAnalyticsYearColumn - 1];
-        if (headerVal === "Historical Spending Summary" || existingHeaders[i][16] === "Historical Spending Summary") {
+        if (headerVal === "Historical Spending Summary" || existingHeaders[i][myNumbers.summaryChartsStartColumn - 1] === "Historical Spending Summary") {
             startRow = i + 1;
             // Clear content across all analytics columns
-            summarySheet.getRange(startRow, 1, Math.max(lastRowOfData - startRow + 30, 1), 25).clearContent();
+            summarySheet.getRange(startRow, 1, Math.max(lastRowOfData - startRow + 30, 1), myNumbers.summaryAnalyticsTotalColumns).clearContent();
             break;
         }
     }

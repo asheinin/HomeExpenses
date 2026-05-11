@@ -52,7 +52,7 @@ function summaryExpenses() {
         const sheet = ss.getSheetByName(sheetName);
         if (!sheet) return;
 
-        const range = sheet.getRange('A2:D50');
+        const range = sheet.getRange(myNumbers.expenseCarryOverRow, myNumbers.expenseTypeColumn, myNumbers.expenseLastRow - myNumbers.expenseCarryOverRow + 1, myNumbers.expenseAmountColumn);
         const values = range.getValues();
 
         values.forEach(row => {
