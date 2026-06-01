@@ -53,7 +53,6 @@ function payMonth(mode, month) {
   
   var date = new Date();
   var currentMonth = date.getMonth();
-  var formattedMonth = Utilities.formatDate(date,"GMT", "MMMM");
   
   //date.setMonth(currentMonth - 1,1)
   //var m = date.getMonth();
@@ -84,7 +83,9 @@ function payMonth(mode, month) {
   
   if (currYear > fileYear) m = 11;
 
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  var formattedMonth = (m + 1 < 12) ? months[m + 1] : "Next Year";
+
   var sheet = ss.getSheets()[m+1];
   var sheetName = sheet.getName();
   var dash = ss.getSheets()[0];

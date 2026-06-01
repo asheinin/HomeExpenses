@@ -19,13 +19,14 @@ function open() {
 
   //var currentMonth = 1;
 
-  var formattedMonthCurrent = Utilities.formatDate(date, "GMT", "MMMM");
+  // Check if this is current year file
+  if (currYear > fileYear) {
+    currentMonth = 12;
+  }
 
-  date.setMonth(currentMonth - 1, 1)
-  var m = date.getMonth();
-  var y = date.getYear();
-
-  var formattedMonthPast = Utilities.formatDate(date, "GMT", "MMMM");
+  var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  var formattedMonthCurrent = currentMonth < 12 ? months[currentMonth] : "";
+  var formattedMonthPast = currentMonth < 12 ? months[(currentMonth - 1 + 12) % 12] : months[11];
 
   var specFundValueSp1 = sheet.getRange(myNumbers.dashBalancesRow, myNumbers.dashSpouse1NameColumn).getValue();
   var specFundValueSp2 = sheet.getRange(myNumbers.dashBalancesRow, myNumbers.dashSpouse2NameColumn).getValue();
@@ -40,8 +41,6 @@ function open() {
   //Check if this is current year file
 
   console.log("month: " + currentMonth);
-
-  if (currYear > fileYear) currentMonth = 12;
 
   switch (currentMonth) {
     case 0:

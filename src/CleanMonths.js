@@ -16,7 +16,8 @@ function cleanMonths(tab,ss) {
       var warning = "This action will clean all tabs in this spreadsheet. Do you want to continue?";
     } else {
       var date = new Date();
-      var formattedMonthCurrent = Utilities.formatDate(date,"GMT", "MMMM");
+      var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      var formattedMonthCurrent = months[date.getMonth()];
       var warning = "This action will clean all tabs after " + formattedMonthCurrent + " in this spreadsheet. Do you want to continue?";
     }  
 
