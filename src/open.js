@@ -248,19 +248,19 @@ function open() {
 }
 
 
-function edit() {
+function edit(e) {
   var myNumbers = new staticNumbers();
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getActiveSheet();
-  var activeCell = sheet.getActiveCell();
-  var col = activeCell.getColumn();
-  var row = activeCell.getRow();
+  var range = (e && e.range) ? e.range : ss.getActiveCell();
+  var sheet = range.getSheet();
+  var col = range.getColumn();
+  var row = range.getRow();
 
   var rs = ss.getSheets()[0];
   var rsName = rs.getName();
   var sheetName = sheet.getName();
 
-  activeCell.setFontFamily('arial').setFontSize('10');
+  range.setFontFamily('arial').setFontSize('10');
 
 
   if (sheetName == 'Summary') return;
