@@ -97,9 +97,6 @@ The project expects a specific spreadsheet structure:
 
 ---
 
-## TODO
-Please find the date column and populate it (in current month only, also for recurrent expenses fill date for current month only) for new expense, or update it for updated existing expense (actually this is last update date
-
 ## Setup Instructions
 
 ### Option 1: Manual Setup (Copy/Paste)
