@@ -271,6 +271,23 @@ function edit() {
     }
   } else {
     if ((row > myNumbers.expenseCarryOverRow) && (row <= myNumbers.expenseLastRow)) {
+      if (col !== myNumbers.expenseDateColumn) {
+        var typeVal = sheet.getRange(row, myNumbers.expenseTypeColumn).getValue();
+        var descVal = sheet.getRange(row, myNumbers.expenseDescrColumn).getValue();
+        var amountVal = sheet.getRange(row, myNumbers.expenseAmountColumn).getValue();
+        var hasRecord = (typeVal != null && typeVal.toString().trim() !== "") ||
+                        (descVal != null && descVal.toString().trim() !== "") ||
+                        (amountVal != null && amountVal.toString().trim() !== "");
+
+        if (hasRecord) {
+          if (!isFutureMonthOrYear(sheet)) {
+            sheet.getRange(row, myNumbers.expenseDateColumn).setValue(new Date());
+          }
+        } else {
+          sheet.getRange(row, myNumbers.expenseDateColumn).clearContent();
+        }
+      }
+
       var splitRange = sheet.getRange(row, myNumbers.expenceSplitColumn);
       var splitRange1 = sheet.getRange(row, myNumbers.expenceSplit1Column); //5 Sp1
       var splitRange2 = sheet.getRange(row, myNumbers.expenceSplit2Column); //6 Sp2 
@@ -423,4 +440,32 @@ function copyFormatting(row) {
   sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
   // Copy data validation (including dropdown color schemes/chips)
   sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_DATA_VALIDATION, false);
+}
+
+
+function isFutureMonthOrYear(sheet) {
+  if (!sheet) return false;
+  var now = new Date();
+  var currentYear = now.getFullYear();
+  var currentMonth = now.getMonth() + 1; // 1-12
+
+  var name = sheet.getName();
+  var parts = name.split(" ");
+  if (parts.length < 2) return false;
+
+  var monthsFull = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  var monthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
+  var sheetMonth = monthsFull.indexOf(parts[0]) + 1;
+  if (sheetMonth === 0) {
+    sheetMonth = monthsShort.indexOf(parts[0]) + 1;
+  }
+  var sheetYear = parseInt(parts[1]);
+
+  if (isNaN(sheetYear) || sheetMonth === 0) return false;
+
+  if (sheetYear > currentYear) return true;
+  if (sheetYear === currentYear && sheetMonth > currentMonth) return true;
+
+  return false;
 }

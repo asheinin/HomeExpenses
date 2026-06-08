@@ -134,6 +134,12 @@ function copyExpensesBetweenSheets(sourceSheet, targetSheet) {
                 sourceSheet.getRange(sourceRow, 1, 1, lastCol)
                     .copyTo(targetSheet.getRange(targetRow, 1));
 
+                if (!isFutureMonthOrYear(targetSheet)) {
+                    targetSheet.getRange(targetRow, myNumbers.expenseDateColumn).setValue(new Date());
+                } else {
+                    targetSheet.getRange(targetRow, myNumbers.expenseDateColumn).clearContent();
+                }
+
                 count++;
             }
         }

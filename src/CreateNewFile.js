@@ -92,6 +92,9 @@ function createNewFile() {
         // Carry over only the "definition" columns
         janSheet.getRange(janTargetRow, myNumbers.expenseTypeColumn).setValue(decExpensesData[k][0]);
         janSheet.getRange(janTargetRow, myNumbers.expenseDescrColumn).setValue(decExpensesData[k][1]);
+        if (!isFutureMonthOrYear(janSheet)) {
+          janSheet.getRange(janTargetRow, myNumbers.expenseDateColumn).setValue(new Date());
+        }
         janSheet.getRange(janTargetRow, myNumbers.expenseAmountColumn).setValue(decExpensesData[k][3]);
         janSheet.getRange(janTargetRow, myNumbers.expenceSplitColumn).setValue(decExpensesData[k][6]);
         janSheet.getRange(janTargetRow, myNumbers.expencePeriodColumn).setValue(decExpensesData[k][9]);

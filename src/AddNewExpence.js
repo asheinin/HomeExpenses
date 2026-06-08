@@ -247,6 +247,9 @@ function processForm(newExpenseItem, newExpenseType, expenseAmount, pap, expense
           }
         }
         sheet.getRange(row, myNumbers.expenseTypeColumn).setValue(newExpenseType);
+        if (!isFutureMonthOrYear(sheet)) {
+          sheet.getRange(row, myNumbers.expenseDateColumn).setValue(new Date());
+        }
         sheet.getRange(row, myNumbers.expensePAPColumn).setValue(pap ? 'PAP' : '');
         sheet.getRange(row, myNumbers.expencePeriodColumn).setValue(expensePeriod);
         sheet.getRange(row, myNumbers.expenceSplitColumn).setValue(split ? 'Y' : 'N');
@@ -269,6 +272,9 @@ function processForm(newExpenseItem, newExpenseType, expenseAmount, pap, expense
                 if (paidByIndex == 2) sheet.getRange(j + myNumbers.expenseFirstRow, myNumbers.expenseFirstPayColumn).setValue(expenseAmount);
                 console.log("paidByIndex !=0, paidByName " + paidByIndex + " " + paidByName);
               }
+            }
+            if (!isFutureMonthOrYear(sheet)) {
+              sheet.getRange(j + myNumbers.expenseFirstRow, myNumbers.expenseDateColumn).setValue(new Date());
             }
             sheet.getRange(j + myNumbers.expenseFirstRow, myNumbers.expensePAPColumn).setValue(pap ? 'PAP' : '');
             sheet.getRange(j + myNumbers.expenseFirstRow, myNumbers.expencePeriodColumn).setValue(expensePeriod);
