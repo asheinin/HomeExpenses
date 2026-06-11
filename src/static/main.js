@@ -14,6 +14,7 @@ class staticNumbers {
     this.expenseSpToSpRow = 2;
     this.expenseFirstRow = 3;
     this.expenseLastRow = 50;
+    this.expenseTotalAmountRowBeforeSplit = 52;
     this.expenseTotalAmountRow = 53;
     this.expenseTotalPaidSp2Row = 56;
     this.expenseTotalPaidSp1Row = 60;
@@ -43,6 +44,7 @@ class staticNumbers {
     this.expenseSp1ToSp2Column = 14;
 
     this.dashAddressRow = 1;
+
     this.dashNamesRow = 2;
     this.dashEmailsRow = 3;
     this.dashSplitRow = 4
@@ -90,6 +92,18 @@ class staticNumbers {
     this.agentOnlinePurchasesMonthly = 800;
     this.agentGasolineMonthly = 0;
     this.agentMiscMonthly = 1000;
+
+    // Expense Analysis Agent - API Key
+    this.agentApiKey = 'GEMINI_API_KEY';
+    this.agentModel = 'gemini-2.5-flash';
+    this.agentUrl = 'https://generativelanguage.googleapis.com/v1beta/models/' + this.agentModel + ':generateContent?key=';
+
+    // Privacy Policy, Support and App Info
+    this.privacyPolicyUrl = 'https://github.com/asheinin/hem_home-expenses-mobile/blob/main/PrivacyPolicy.html';
+    this.supportEmail = 'galaxsolutions@gmail.com';
+    this.appVersion = '0.0.1';
+    this.appName = 'Home Expenses';
+    this.appDeveloper = 'Galaxsolutions';
   }
 
   privilegedMethod() {
