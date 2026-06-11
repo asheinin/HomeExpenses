@@ -1,6 +1,3 @@
-function main() {
-}
-
 // global variables
 MAILER = 'HomePayments';
 FILENAME = 'Home payments';
@@ -82,6 +79,7 @@ class staticNumbers {
     this.summaryAnalyticsDataStartColumn = 4;
     this.summaryChartsStartColumn = 17;
     this.summaryAnalyticsMonthColumn = 1;
+    this.summaryAnalyticsTotalColumns = 60;
 
     this.dashBalanceNegativeBgColor = "red";
     this.dashBalancePositiveBgColor = "green";
@@ -104,9 +102,5 @@ class staticNumbers {
     this.appVersion = '0.0.1';
     this.appName = 'Home Expenses';
     this.appDeveloper = 'Galaxsolutions';
-  }
-
-  privilegedMethod() {
-    alert();
   }
 }
