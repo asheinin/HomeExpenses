@@ -35,7 +35,7 @@ function createNewFile() {
     console.log("next year file - ", nextYear);
 
     //var ssNewDate = month + "/" + day + "/" + year;
-    var newFileName = FILENAME + " " + nextYear;
+    var newFileName = myNumbers.sourceFilename + " " + nextYear;
 
     //check if file already exists
     if (DriveApp.getFilesByName(newFileName).hasNext() === true) throw "FileAlreadyExists";

@@ -1,8 +1,3 @@
-// global variables
-MAILER = 'HomePayments';
-FILENAME = 'Home payments';
-
-
 class staticNumbers {
   constructor() {
     this.thresholdLimitForClosingMonth = 1;
@@ -40,11 +35,13 @@ class staticNumbers {
     this.expenseSp2ToSp1Column = 13;
     this.expenseSp1ToSp2Column = 14;
 
+    // Dashboard rows
+
     this.dashAddressRow = 1;
 
     this.dashNamesRow = 2;
     this.dashEmailsRow = 3;
-    this.dashSplitRow = 4
+    this.dashSplitRow = 4;
     this.dashBalancesRow = 5;
     this.dashTitleRow = 6;
     this.dashFirstMonthRow = 7;
@@ -55,10 +52,11 @@ class staticNumbers {
     this.dashSp1SplitColumn = 2;
     this.dashSp2SplitColumn = 3;
 
+    // Dashboard data columns
+
     this.dashMonthNameColumn = 1;
     this.dashSp1BalanceUsedColumn = 2;
     this.dashSp2BalanceUsedColumn = 3;
-
     this.dashAmountTotalBeforeSplitColumn = 4;
     this.dashAmountTotalColumn = 5;
     this.dashSp2PartColumn = 6;
@@ -71,8 +69,16 @@ class staticNumbers {
     this.dashSp1BalanceColumn = 13;
     this.dashColumns = 13;
 
-    this.summaryHeaderRow = 1
-    this.summarySumRow = 2
+    // Dashboard balance cell color constants
+
+    this.dashBalanceNegativeBgColor = "red";
+    this.dashBalancePositiveBgColor = "green";
+    this.dashBalanceNeutralBgColor = "green";
+
+    // Summary rows/columns
+
+    this.summaryHeaderRow = 1;
+    this.summarySumRow = 2;
 
     this.summaryAmountColumn = 3;
     this.summaryAnalyticsYearColumn = 1;
@@ -80,10 +86,6 @@ class staticNumbers {
     this.summaryChartsStartColumn = 17;
     this.summaryAnalyticsMonthColumn = 1;
     this.summaryAnalyticsTotalColumns = 60;
-
-    this.dashBalanceNegativeBgColor = "red";
-    this.dashBalancePositiveBgColor = "green";
-    this.dashBalanceNeutralBgColor = "green";
 
     // Expense Analysis Agent - Non-posted monthly projections
     this.agentGroceriesMonthly = 800;
@@ -102,5 +104,9 @@ class staticNumbers {
     this.appVersion = '0.0.1';
     this.appName = 'Home Expenses';
     this.appDeveloper = 'Galaxsolutions';
+
+    // Global settings
+    this.mailerName = 'HomePayments';
+    this.sourceFilename = 'Home payments';
   }
 }

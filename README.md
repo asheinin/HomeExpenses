@@ -24,7 +24,7 @@ HomeExpenses/
 ├── README.md                # This file
 ├── src/                     # Core application logic
 │   ├── static/
-│   │   └── main.js          # Global configs, constants, spreadsheet layout definitions
+│   │   └── StaticNumbers.js  # Global configs, constants, spreadsheet layout definitions
 │   ├── utils/
 │   │   └── Utilities.js     # Helper functions for custom UI dialogs (Yes/No, Input prompts)
 │   ├── open.js              # onOpen trigger, custom menus, cell validation, formula updates
@@ -50,7 +50,7 @@ HomeExpenses/
 
 | File | Purpose |
 |------|---------|
-| `main.js` | Defines all spreadsheet layout constants (row/column positions), threshold limits, and color schemes |
+| `StaticNumbers.js` | Defines all spreadsheet layout constants (row/column positions), threshold limits, and color schemes |
 | `open.js` | Entry point that creates custom menus (`Payments`, `Settle Month`, `Expenses`, `General Actions`) and handles cell edit triggers |
 | `Analytics.js` | Aggregates data across multiple yearly files to generate historical spending trends with stacked column charts |
 | `SummaryAI.js` | Creates the "Summary" sheet with category aggregations and annual charts |
@@ -168,7 +168,7 @@ Once installed, you will see custom menus in your Google Sheet:
 
 ## Configuration
 
-Key configuration values are defined in `src/static/main.js`:
+Key configuration values are defined in `src/static/StaticNumbers.js`:
 
 ```javascript
 // Global settings

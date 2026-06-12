@@ -1,6 +1,6 @@
 # Hardcoded Cell References Audit
 
-This document lists every place in the **HomeExpenses** repo where Google Sheets cells/rows/columns are addressed by literal numbers or A1 notation instead of by the constants defined in `staticNumbers` (in [src/static/main.js](src/static/main.js)).
+This document lists every place in the **HomeExpenses** repo where Google Sheets cells/rows/columns are addressed by literal numbers or A1 notation instead of by the constants defined in `staticNumbers` (in [src/static/StaticNumbers.js](src/static/StaticNumbers.js)).
 
 ## Audit rules
 
@@ -11,7 +11,7 @@ A line is flagged when it uses a literal cell reference that **could** be expres
 
 Hardcoded **columns** (even `1`, `2`, `3`) are **not** exceptions — `expenseTypeColumn`, `expenseDescrColumn`, `expenseInitialBalanceCol`, `summaryAnalyticsYearColumn`, etc. exist and should be used.
 
-Constants reference (from [src/static/main.js](src/static/main.js)):
+Constants reference (from [src/static/StaticNumbers.js](src/static/StaticNumbers.js)):
 
 | Field | Value |
 |---|---|
@@ -102,7 +102,7 @@ The span `6` corresponds to `expensePAPColumn (12) - expenceSplitColumn (7) + 1`
 
 ### Hardcoded column-span `25` with no constant — **FIXED**
 
-Added `summaryAnalyticsTotalColumns = 25` to `staticNumbers` in [src/static/main.js](src/static/main.js).
+Added `summaryAnalyticsTotalColumns = 25` to `staticNumbers` in [src/static/StaticNumbers.js](src/static/StaticNumbers.js).
 
 | File | Line | Status |
 |---|---|---|
@@ -159,7 +159,7 @@ These pass the row-`1` allowed exception, but the column is still a literal:
 
 - A1 literals (`'A2:D50'`) in [src/CreateEOYDocument.js:95](src/CreateEOYDocument.js#L95) and [src/SummaryExpenses.js:55](src/SummaryExpenses.js#L55).
 - `7, numOfRows, 6` block in [src/CleanMonths.js:43](src/CleanMonths.js#L43) and [src/CreateNewFile.js:74](src/CreateNewFile.js#L74).
-- Added `summaryAnalyticsTotalColumns = 25` to [src/static/main.js](src/static/main.js); replaced `25` literals at [src/Analytics.js:126](src/Analytics.js#L126) and [src/Analytics.js:135](src/Analytics.js#L135), and the matching `[16]` index at [src/Analytics.js:132](src/Analytics.js#L132) (now `[myNumbers.summaryChartsStartColumn - 1]`).
+- Added `summaryAnalyticsTotalColumns = 25` to [src/static/StaticNumbers.js](src/static/StaticNumbers.js); replaced `25` literals at [src/Analytics.js:126](src/Analytics.js#L126) and [src/Analytics.js:135](src/Analytics.js#L135), and the matching `[16]` index at [src/Analytics.js:132](src/Analytics.js#L132) (now `[myNumbers.summaryChartsStartColumn - 1]`).
 
 ### What's still open
 
