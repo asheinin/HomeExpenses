@@ -415,15 +415,6 @@ function validatePeriod(row, col) {
 }
 
 
-function fncOpenMyDialog() {
-  //Open a dialog
-  var htmlDlg = HtmlService.createHtmlOutputFromFile('HTML_myHtml')
-    .setSandboxMode(HtmlService.SandboxMode.IFRAME)
-    .setWidth(200)
-    .setHeight(150);
-  SpreadsheetApp.getUi()
-    .showModalDialog(htmlDlg, 'A Title Goes Here');
-};
 
 
 function copyFormatting(row) {
@@ -446,7 +437,7 @@ function copyFormatting(row) {
 
 
 function showSplitDialog() {
-  var html = HtmlService.createHtmlOutputFromFile('ChangeSplitDialog')
+  var html = HtmlService.createHtmlOutputFromFile('ui/ChangeSplitDialog')
     .setWidth(380)
     .setHeight(260);
   SpreadsheetApp.getUi().showModalDialog(html, 'Change Split From Month');
