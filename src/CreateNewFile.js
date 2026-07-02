@@ -83,6 +83,15 @@ function createNewFile() {
     }
   
 
+    // Seed each new month's split config from Dashboard (display indicator of current split)
+    var dashSp1Pct = ss.getSheets()[0].getRange(myNumbers.dashSplitRow, myNumbers.dashSp1SplitColumn).getValue();
+    var dashSp2Pct = ss.getSheets()[0].getRange(myNumbers.dashSplitRow, myNumbers.dashSp2SplitColumn).getValue();
+    for (var s = 1; s <= 12; s++) {
+      var splitSheet = ssNext.getSheets()[s];
+      splitSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.expenceSplit1Column).setValue(dashSp1Pct);
+      splitSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.expenceSplit2Column).setValue(dashSp2Pct);
+    }
+
     // 2. Load recurring expenses from December (old) into January (new)
     var janSheet = ssNext.getSheets()[1];
     var janTargetRow = myNumbers.expenseFirstRow;
