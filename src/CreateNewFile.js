@@ -88,8 +88,9 @@ function createNewFile() {
     var dashSp2Pct = ss.getSheets()[0].getRange(myNumbers.dashSplitRow, myNumbers.dashSp2SplitColumn).getValue();
     for (var s = 1; s <= 12; s++) {
       var splitSheet = ssNext.getSheets()[s];
-      splitSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.expenceSplit1Column).setValue(dashSp1Pct);
-      splitSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.expenceSplit2Column).setValue(dashSp2Pct);
+      splitSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.monthSplitLabelColumn).setValue('Monthly Split');
+      splitSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.expenceSplit1Column).setValue(dashSp1Pct).setNumberFormat('0%');
+      splitSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.expenceSplit2Column).setValue(dashSp2Pct).setNumberFormat('0%');
     }
 
     // 2. Load recurring expenses from December (old) into January (new)

@@ -456,12 +456,24 @@ function setSplitFromMonth(startMonthIndex, sp1Pct, sp2Pct) {
   for (var i = startMonthIndex; i <= 12; i++) {
     var monthSheet = sheets[i];
     if (monthSheet) {
-      monthSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.expenceSplit1Column).setValue(sp1Pct);
-      monthSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.expenceSplit2Column).setValue(sp2Pct);
+      var sp1Cell = monthSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.expenceSplit1Column);
+      var sp2Cell = monthSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.expenceSplit2Column);
+      sp1Cell.setValue(sp1Pct).setNumberFormat('0%');
+      sp2Cell.setValue(sp2Pct).setNumberFormat('0%');
+      monthSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.monthSplitLabelColumn).setValue('Monthly Split');
     }
   }
 
   SpreadsheetApp.getActiveSpreadsheet().toast('Split updated from month ' + startMonthIndex + ' onward.', 'Done', 3);
+}
+
+function getSpouseNames() {
+  var myNumbers = new staticNumbers();
+  var dash = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  return {
+    sp1: dash.getRange(myNumbers.dashNamesRow, myNumbers.dashSpouse1NameColumn).getValue() || 'Spouse 1',
+    sp2: dash.getRange(myNumbers.dashNamesRow, myNumbers.dashSpouse2NameColumn).getValue() || 'Spouse 2'
+  };
 }
 
 function migrateSplitConfig() {
@@ -473,18 +485,48 @@ function migrateSplitConfig() {
   var sp1Pct = dash.getRange(myNumbers.dashSplitRow, myNumbers.dashSp1SplitColumn).getValue();
   var sp2Pct = dash.getRange(myNumbers.dashSplitRow, myNumbers.dashSp2SplitColumn).getValue();
 
+  // Pre-compute column letters from a reference sheet (letters are constant across all sheets)
+  var refSheet = sheets[1];
+  var sp1Col = refSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.expenceSplit1Column).getA1Notation().slice(0, 1);
+  var sp2Col = refSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.expenceSplit2Column).getA1Notation().slice(0, 1);
+  var splitColLetter = refSheet.getRange(myNumbers.expenseFirstRow, myNumbers.expenceSplitColumn).getA1Notation().slice(0, 1);
+  var amountColLetter = refSheet.getRange(myNumbers.expenseFirstRow, myNumbers.expenseAmountColumn).getA1Notation().slice(0, 1);
+
+  var numRows = myNumbers.expenseLastRow - myNumbers.expenseFirstRow + 1;
+
+  // Build formula arrays once — column letters and config row are identical for every sheet
+  var sp1Formulas = [];
+  var sp2Formulas = [];
+  for (var row = myNumbers.expenseFirstRow; row <= myNumbers.expenseLastRow; row++) {
+    var splitRef = splitColLetter + row;
+    var amountRef = amountColLetter + row;
+    sp1Formulas.push(['=IF (' + splitRef + '<> "N", IF(ISBLANK(' + amountRef + '),"", ROUND(' + amountRef + '*$' + sp1Col + '$' + myNumbers.monthSplitConfigRow + ',2)),"")']);
+    sp2Formulas.push(['=IF (' + splitRef + '<> "N", IF(ISBLANK(' + amountRef + '),"", ROUND(' + amountRef + '*$' + sp2Col + '$' + myNumbers.monthSplitConfigRow + ',2)),"")']);
+  }
+
   for (var i = 1; i <= 12; i++) {
     var monthSheet = sheets[i];
     if (!monthSheet) continue;
+
+    // Set config row values if blank
     var sp1Cell = monthSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.expenceSplit1Column);
     var sp2Cell = monthSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.expenceSplit2Column);
     if (sp1Cell.getValue() === '' && sp2Cell.getValue() === '') {
       sp1Cell.setValue(sp1Pct);
       sp2Cell.setValue(sp2Pct);
     }
+
+    // Label and percentage format
+    monthSheet.getRange(myNumbers.monthSplitConfigRow, myNumbers.monthSplitLabelColumn).setValue('Monthly Split');
+    sp1Cell.setNumberFormat('0%');
+    sp2Cell.setNumberFormat('0%');
+
+    // Rewrite all expense row split formulas to reference local config row
+    monthSheet.getRange(myNumbers.expenseFirstRow, myNumbers.expenceSplit1Column, numRows, 1).setFormulas(sp1Formulas);
+    monthSheet.getRange(myNumbers.expenseFirstRow, myNumbers.expenceSplit2Column, numRows, 1).setFormulas(sp2Formulas);
   }
 
-  SpreadsheetApp.getActiveSpreadsheet().toast('Split config initialized for all months.', 'Done', 3);
+  SpreadsheetApp.getActiveSpreadsheet().toast('Split config initialized and formulas updated for all months.', 'Done', 3);
 }
 
 function isFutureMonthOrYear(sheet) {
