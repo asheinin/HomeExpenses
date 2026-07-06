@@ -274,7 +274,7 @@ function edit() {
     }
   } else {
     if ((row > myNumbers.expenseCarryOverRow) && (row <= myNumbers.expenseLastRow)) {
-      if (col !== myNumbers.expenseDateColumn) {
+      if (col !== myNumbers.expenseDateColumn && col >= myNumbers.expenseTypeColumn && col <= myNumbers.expensePAPColumn) {
         var typeVal = sheet.getRange(row, myNumbers.expenseTypeColumn).getValue();
         var descVal = sheet.getRange(row, myNumbers.expenseDescrColumn).getValue();
         var amountVal = sheet.getRange(row, myNumbers.expenseAmountColumn).getValue();
