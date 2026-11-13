@@ -108,7 +108,7 @@ function recalculateWithAssumptions(groceries, onlinePurchases, gasoline, misc) 
     };
 
     const comparisonData = getMonthlyComparisonData(
-        ss, currentMonthIndex, currentYear, prevMonthIndex, prevMonthYear, myNumbers, months
+        ss, currentMonthIndex, currentYear, prevMonthIndex, prevMonthYear, myNumbers, months, customAssumptions
     );
 
     // Pass custom assumptions to forecast calculation
@@ -138,67 +138,178 @@ function recalculateWithAssumptions(groceries, onlinePurchases, gasoline, misc) 
 
 /**
  * Gathers monthly comparison data: current, previous month, and YoY.
- * Applies a projection multiplier to the current month's spend based on
- * how far into the month we are, so comparisons against full months are fairer:
- *   - Day in first 1/3 of month  → double the amount (2×)
- *   - Day between 1/3 and 1/2    → 1.2 the amount (1.2×)
- *   - Day past 1/2               → use actual amount  (1×)
+ * Forecasts the current month's final spend by analyzing:
+ *   - Dates of entries in the current month (normalized: empty/early -> day 1, late -> daysInMonth)
+ *   - Dates and amounts of itemized bills in prior completed months of the current year (or prior year if Jan)
+ *   - Expected remaining bills typically occurring after today that haven't been entered yet
+ *   - Non-posted monthly assumptions (groceries, online purchases, gasoline, misc)
  */
-function getMonthlyComparisonData(ss, currentMonthIndex, currentYear, prevMonthIndex, prevMonthYear, myNumbers, months) {
+function getMonthlyComparisonData(ss, currentMonthIndex, currentYear, prevMonthIndex, prevMonthYear, myNumbers, months, customAssumptions) {
     const currentMonthName = months[currentMonthIndex];
     const prevMonthName = months[prevMonthIndex];
 
     // Current month stats (may be partial if mid-month)
     const currentSS = getSpreadsheetForYear(currentYear);
-    const currentStats = currentSS ? getMonthStats(currentSS, currentMonthName, currentYear, myNumbers) : null;
+    const currentStats = currentSS ? getMonthStats(currentSS, currentMonthName, currentYear, myNumbers, currentMonthIndex) : null;
 
     // Previous month stats
     const prevSS = (prevMonthYear === currentYear) ? currentSS : getSpreadsheetForYear(prevMonthYear);
-    const prevStats = prevSS ? getMonthStats(prevSS, prevMonthName, prevMonthYear, myNumbers) : null;
+    const prevStats = prevSS ? getMonthStats(prevSS, prevMonthName, prevMonthYear, myNumbers, prevMonthIndex) : null;
 
     // Year-over-year (same month last year)
     const yearAgoYear = currentYear - 1;
     const yearAgoSS = getSpreadsheetForYear(yearAgoYear);
-    const yearAgoStats = yearAgoSS ? getMonthStats(yearAgoSS, currentMonthName, yearAgoYear, myNumbers) : null;
+    const yearAgoStats = yearAgoSS ? getMonthStats(yearAgoSS, currentMonthName, yearAgoYear, myNumbers, currentMonthIndex) : null;
 
-    // --- Projection multiplier based on current date within the month ---
+    // Current date & cutoff within the month
     const now = new Date();
-    const currentDay = now.getDate();
-    // Total days in the current month
     const daysInMonth = new Date(currentYear, currentMonthIndex + 1, 0).getDate();
-    const oneThird = daysInMonth / 3;
-    const oneHalf = daysInMonth / 2;
+    const currentDay = Math.min(now.getDate(), daysInMonth);
 
-    let projectionMultiplier = 1;
-    let projectionLabel = 'actual (past mid-month)';
-    if (currentDay <= oneThird) {
-        projectionMultiplier = 2;
-        projectionLabel = '2× estimate (first 1/3 of month)';
-    } else if (currentDay <= oneHalf) {
-        projectionMultiplier = 1.2;
-        projectionLabel = '1.2× estimate (between 1/3 and 1/2 of month)';
+    // 1. Current month entered bills
+    const currentEnteredKeys = new Set();
+    const actualSpendToDate = currentStats ? currentStats.totalSpend : 0;
+
+    if (currentStats && currentStats.entries) {
+        currentStats.entries.forEach(e => {
+            const desc = (e.description || '').toLowerCase().trim();
+            const cat = (e.category || '').toLowerCase().trim();
+            if (desc) currentEnteredKeys.add(desc);
+            if (cat) currentEnteredKeys.add(cat);
+        });
     }
 
-    // Estimated current month spend used for comparisons
-    const estimatedCurrentSpend = currentStats ? currentStats.totalSpend * projectionMultiplier : 0;
+    // 2. Analyze prior completed months in the current year
+    const historicalBills = {};
+    let pastCompletedMonthsCount = 0;
+
+    for (let m = 0; m < currentMonthIndex; m++) {
+        const pastStats = getMonthStats(currentSS, months[m], currentYear, myNumbers, m);
+        if (pastStats && pastStats.entries && pastStats.entries.length > 0) {
+            pastCompletedMonthsCount++;
+            pastStats.entries.forEach(e => {
+                const desc = (e.description || '').toLowerCase().trim();
+                const cat = (e.category || '').toLowerCase().trim();
+                const key = desc || cat;
+                if (!key) return;
+
+                if (!historicalBills[key]) {
+                    historicalBills[key] = {
+                        name: e.description || e.category,
+                        category: e.category,
+                        days: [],
+                        amounts: [],
+                        monthsSeen: new Set()
+                    };
+                }
+                historicalBills[key].days.push(e.day);
+                historicalBills[key].amounts.push(e.amount);
+                historicalBills[key].monthsSeen.add(m);
+            });
+        }
+    }
+
+    // Fallback: If January (no prior completed months in current year), check prior year
+    if (pastCompletedMonthsCount === 0 && yearAgoSS) {
+        for (let m = 0; m < 12; m++) {
+            const pastStats = getMonthStats(yearAgoSS, months[m], yearAgoYear, myNumbers, m);
+            if (pastStats && pastStats.entries && pastStats.entries.length > 0) {
+                pastCompletedMonthsCount++;
+                pastStats.entries.forEach(e => {
+                    const desc = (e.description || '').toLowerCase().trim();
+                    const cat = (e.category || '').toLowerCase().trim();
+                    const key = desc || cat;
+                    if (!key) return;
+
+                    if (!historicalBills[key]) {
+                        historicalBills[key] = {
+                            name: e.description || e.category,
+                            category: e.category,
+                            days: [],
+                            amounts: [],
+                            monthsSeen: new Set()
+                        };
+                    }
+                    historicalBills[key].days.push(e.day);
+                    historicalBills[key].amounts.push(e.amount);
+                    historicalBills[key].monthsSeen.add(m);
+                });
+            }
+        }
+    }
+
+    // 3. Find bills that typically appear after day D and have not been entered yet
+    let projectedRemainingPosted = 0;
+    const expectedRemainingBills = [];
+
+    if (pastCompletedMonthsCount > 0) {
+        for (const [key, bill] of Object.entries(historicalBills)) {
+            const desc = (bill.name || '').toLowerCase().trim();
+            const cat = (bill.category || '').toLowerCase().trim();
+            if (currentEnteredKeys.has(key) || (desc && currentEnteredKeys.has(desc)) || (cat && currentEnteredKeys.has(cat))) {
+                continue;
+            }
+
+            const avgDay = bill.days.reduce((sum, d) => sum + d, 0) / bill.days.length;
+
+            if (avgDay > currentDay) {
+                const totalAmount = bill.amounts.reduce((sum, a) => sum + a, 0);
+                const avgOccurAmount = totalAmount / bill.amounts.length;
+                const isRegular = bill.monthsSeen.size >= Math.ceil(pastCompletedMonthsCount / 2);
+                const billProjectedAmount = isRegular ? avgOccurAmount : (totalAmount / pastCompletedMonthsCount);
+
+                projectedRemainingPosted += billProjectedAmount;
+                expectedRemainingBills.push({
+                    name: bill.name,
+                    category: bill.category,
+                    expectedDay: Math.round(avgDay),
+                    amount: billProjectedAmount
+                });
+            }
+        }
+    }
+
+    // 4. Non-posted monthly projections from shared data (or custom assumptions)
+    const groceriesMonthly = (customAssumptions && customAssumptions.groceries !== undefined)
+        ? customAssumptions.groceries
+        : (myNumbers.agentGroceriesMonthly || 0);
+    const onlinePurchasesMonthly = (customAssumptions && customAssumptions.onlinePurchases !== undefined)
+        ? customAssumptions.onlinePurchases
+        : (myNumbers.agentOnlinePurchasesMonthly || 0);
+    const gasolineMonthly = (customAssumptions && customAssumptions.gasoline !== undefined)
+        ? customAssumptions.gasoline
+        : (myNumbers.agentGasolineMonthly || 0);
+    const miscMonthly = (customAssumptions && customAssumptions.misc !== undefined)
+        ? customAssumptions.misc
+        : (myNumbers.agentMiscMonthly || 0);
+    const nonPostedMonthly = groceriesMonthly + onlinePurchasesMonthly + gasolineMonthly + miscMonthly;
+
+    // 5. Final monthly spend forecast
+    const estimatedCurrentSpend = actualSpendToDate + projectedRemainingPosted + nonPostedMonthly;
+
+    const projectionLabel = expectedRemainingBills.length > 0
+        ? `actual + ${expectedRemainingBills.length} expected bills + non-posted`
+        : `actual + non-posted assumptions`;
 
     // Calculate changes using the estimated (projected) current month spend
     let vsPrevMonth = null;
     let vsYearAgo = null;
 
     if (currentStats && prevStats && prevStats.totalSpend > 0) {
-        const diff = estimatedCurrentSpend - prevStats.totalSpend;
+        const prevTotalWithNonPosted = prevStats.totalSpend + nonPostedMonthly;
+        const diff = estimatedCurrentSpend - prevTotalWithNonPosted;
         vsPrevMonth = {
             difference: diff,
-            percentChange: ((diff / prevStats.totalSpend) * 100).toFixed(1)
+            percentChange: ((diff / prevTotalWithNonPosted) * 100).toFixed(1)
         };
     }
 
     if (currentStats && yearAgoStats && yearAgoStats.totalSpend > 0) {
-        const diff = estimatedCurrentSpend - yearAgoStats.totalSpend;
+        const yearAgoTotalWithNonPosted = yearAgoStats.totalSpend + nonPostedMonthly;
+        const diff = estimatedCurrentSpend - yearAgoTotalWithNonPosted;
         vsYearAgo = {
             difference: diff,
-            percentChange: ((diff / yearAgoStats.totalSpend) * 100).toFixed(1)
+            percentChange: ((diff / yearAgoTotalWithNonPosted) * 100).toFixed(1)
         };
     }
 
@@ -215,10 +326,12 @@ function getMonthlyComparisonData(ss, currentMonthIndex, currentYear, prevMonthI
         projection: {
             currentDay: currentDay,
             daysInMonth: daysInMonth,
-            multiplier: projectionMultiplier,
             label: projectionLabel,
             estimatedMonthlySpend: estimatedCurrentSpend,
-            actualSpendToDate: currentStats ? currentStats.totalSpend : 0
+            actualSpendToDate: actualSpendToDate,
+            projectedRemainingPosted: projectedRemainingPosted,
+            nonPostedMonthly: nonPostedMonthly,
+            expectedRemainingBills: expectedRemainingBills
         }
     };
 }

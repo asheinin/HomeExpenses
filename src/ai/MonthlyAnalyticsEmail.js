@@ -64,12 +64,36 @@ function sendMonthlySummaryEmail() {
 }
 
 /**
+ * Normalizes an expense date into a day of the month (1..daysInMonth).
+ * Rules:
+ * - Empty / invalid: day 1
+ * - Earlier than 1st of month: day 1
+ * - Later than last day of month: last day of month (daysInMonth)
+ */
+function normalizeExpenseDay(dateVal, monthIndex, year, daysInMonth) {
+  if (!dateVal) return 1;
+  const d = (dateVal instanceof Date) ? dateVal : new Date(dateVal);
+  if (isNaN(d.getTime())) return 1;
+
+  const firstOfMonth = new Date(year, monthIndex, 1, 0, 0, 0, 0);
+  const lastOfMonth = new Date(year, monthIndex, daysInMonth, 23, 59, 59, 999);
+
+  if (d < firstOfMonth) return 1;
+  if (d > lastOfMonth) return daysInMonth;
+  return d.getDate();
+}
+
+/**
  * Extracts statistics for a specific month from a spreadsheet.
  */
-function getMonthStats(ss, monthName, year, myNumbers) {
+function getMonthStats(ss, monthName, year, myNumbers, monthIndex) {
   const sheetName = `${monthName} ${year}`;
   const sheet = ss.getSheetByName(sheetName);
   if (!sheet) return null;
+
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const mIdx = (typeof monthIndex === 'number' && monthIndex >= 0) ? monthIndex : monthNames.indexOf(monthName);
+  const daysInMonth = (mIdx >= 0) ? new Date(year, mIdx + 1, 0).getDate() : 31;
 
   const lastRow = myNumbers.expenseLastRow;
   const firstRow = myNumbers.expenseFirstRow;
@@ -78,10 +102,12 @@ function getMonthStats(ss, monthName, year, myNumbers) {
   let totalSpend = 0;
   let highestSpend = { description: "None", amount: 0, category: "" };
   const categoryTotals = {};
+  const entries = [];
 
   data.forEach(row => {
     const category = (row[myNumbers.expenseTypeColumn - 1] || "Uncategorized").toString().trim();
     const description = (row[myNumbers.expenseDescrColumn - 1] || "").toString().trim();
+    const dateVal = row[myNumbers.expenseDateColumn - 1];
     const amount = parseFloat(row[myNumbers.expenseAmountColumn - 1]) || 0;
 
     if (amount > 0) {
@@ -94,6 +120,14 @@ function getMonthStats(ss, monthName, year, myNumbers) {
 
       // Update category totals
       categoryTotals[category] = (categoryTotals[category] || 0) + amount;
+
+      const normDay = normalizeExpenseDay(dateVal, mIdx, year, daysInMonth);
+      entries.push({
+        category,
+        description,
+        day: normDay,
+        amount
+      });
     }
   });
 
@@ -109,7 +143,8 @@ function getMonthStats(ss, monthName, year, myNumbers) {
     totalSpend,
     highestSpend,
     topCategory,
-    categoryTotals
+    categoryTotals,
+    entries
   };
 }
 
